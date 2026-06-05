@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
 part 'outbox_db.g.dart';
 
@@ -15,6 +18,13 @@ class PendingPhotos extends Table {
 class OutboxDb extends _$OutboxDb {
   OutboxDb(super.e);
   factory OutboxDb.memory() => OutboxDb(NativeDatabase.memory());
+
+  factory OutboxDb.open() {
+    return OutboxDb(LazyDatabase(() async {
+      final dir = await getApplicationDocumentsDirectory();
+      return NativeDatabase(File(p.join(dir.path, 'outbox.sqlite')));
+    }));
+  }
 
   @override
   int get schemaVersion => 1;
@@ -36,4 +46,7 @@ class OutboxDb extends _$OutboxDb {
 
   Future<int> count() async =>
       (await select(pendingPhotos).get()).length;
+
+  Stream<int> pendingCountStream() =>
+      select(pendingPhotos).watch().map((rows) => rows.length);
 }
