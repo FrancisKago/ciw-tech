@@ -14,3 +14,8 @@ serviceAccount*.json
 # Firebase
 firebase/.runtimeconfig.json
 .firebase/
+
+# Firebase emulator debug logs
+firebase/*-debug.log
+*-debug.log
+firebase/firestore-debug.log
