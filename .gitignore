@@ -1,0 +1,16 @@
+# Node
+node_modules/
+.next/
+firebase/functions/lib/
+# Flutter
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins*
+# Secrets / env
+.env
+.env.local
+*.local
+serviceAccount*.json
+# Firebase
+firebase/.runtimeconfig.json
+.firebase/
