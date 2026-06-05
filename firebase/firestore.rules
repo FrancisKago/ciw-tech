@@ -1,6 +1,26 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{db}/documents {
-    match /{document=**} { allow read, write: if false; }
+    function isSignedIn() { return request.auth != null; }
+    function role() { return request.auth.token.role; }
+    function isManager() { return isSignedIn() && (role() == "manager" || role() == "admin"); }
+
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isManager());
+      allow write: if false; // écrit uniquement par les Cloud Functions (admin)
+    }
+
+    match /sites/{siteId} {
+      allow read: if isSignedIn();
+      allow write: if isManager();
+    }
+
+    match /punches/{punchId} {
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isManager());
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == resource.data.userId;
+      allow delete: if false;
+    }
   }
 }
