@@ -1,0 +1,40 @@
+Jun 05, 2026 10:48:56 AM com.google.cloud.datastore.emulator.firestore.CloudFirestore main
+SEVERE: Exiting due to unexpected exception.
+java.lang.IllegalStateException: failed to create a child event loop
+	at io.netty.util.concurrent.MultithreadEventExecutorGroup.<init>(MultithreadEventExecutorGroup.java:88)
+	at io.netty.util.concurrent.MultithreadEventExecutorGroup.<init>(MultithreadEventExecutorGroup.java:60)
+	at io.netty.channel.MultithreadEventLoopGroup.<init>(MultithreadEventLoopGroup.java:52)
+	at io.netty.channel.nio.NioEventLoopGroup.<init>(NioEventLoopGroup.java:97)
+	at io.netty.channel.nio.NioEventLoopGroup.<init>(NioEventLoopGroup.java:92)
+	at io.netty.channel.nio.NioEventLoopGroup.<init>(NioEventLoopGroup.java:73)
+	at io.netty.channel.nio.NioEventLoopGroup.<init>(NioEventLoopGroup.java:53)
+	at com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer.<init>(WebSocketServer.java:58)
+	at com.google.cloud.datastore.emulator.firestore.CloudFirestore.init(CloudFirestore.java:209)
+	at com.google.cloud.datastore.emulator.firestore.CloudFirestore.startLocally(CloudFirestore.java:121)
+	at com.google.cloud.datastore.emulator.firestore.CloudFirestore.main(CloudFirestore.java:102)
+Caused by: io.netty.channel.ChannelException: failed to open a new selector
+	at io.netty.channel.nio.NioEventLoop.openSelector(NioEventLoop.java:179)
+	at io.netty.channel.nio.NioEventLoop.<init>(NioEventLoop.java:146)
+	at io.netty.channel.nio.NioEventLoopGroup.newChild(NioEventLoopGroup.java:183)
+	at io.netty.channel.nio.NioEventLoopGroup.newChild(NioEventLoopGroup.java:38)
+	at io.netty.util.concurrent.MultithreadEventExecutorGroup.<init>(MultithreadEventExecutorGroup.java:84)
+	... 10 more
+Caused by: java.io.IOException: Unable to establish loopback connection
+	at java.base/sun.nio.ch.PipeImpl$Initializer.run(PipeImpl.java:103)
+	at java.base/sun.nio.ch.PipeImpl$Initializer.run(PipeImpl.java:67)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:569)
+	at java.base/sun.nio.ch.PipeImpl.<init>(PipeImpl.java:198)
+	at java.base/sun.nio.ch.WEPollSelectorImpl.<init>(WEPollSelectorImpl.java:78)
+	at java.base/sun.nio.ch.WEPollSelectorProvider.openSelector(WEPollSelectorProvider.java:33)
+	at io.netty.channel.nio.NioEventLoop.openSelector(NioEventLoop.java:177)
+	... 14 more
+Caused by: java.net.SocketException: Invalid argument: connect
+	at java.base/sun.nio.ch.UnixDomainSockets.connect0(Native Method)
+	at java.base/sun.nio.ch.UnixDomainSockets.connect(UnixDomainSockets.java:148)
+	at java.base/sun.nio.ch.UnixDomainSockets.connect(UnixDomainSockets.java:144)
+	at java.base/sun.nio.ch.SocketChannelImpl.connect(SocketChannelImpl.java:851)
+	at java.base/java.nio.channels.SocketChannel.open(SocketChannel.java:285)
+	at java.base/sun.nio.ch.PipeImpl$Initializer$LoopbackConnector.run(PipeImpl.java:133)
+	at java.base/sun.nio.ch.PipeImpl$Initializer.run(PipeImpl.java:85)
+	... 20 more
+
