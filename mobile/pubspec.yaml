@@ -47,8 +47,7 @@ dependencies:
   path_provider: ^2.1.5
   path: ^1.9.1
   connectivity_plus: ^7.1.1
-  clerk_flutter: ^0.0.14-beta
-  # clerk_flutter: deferred — added during Clerk integration (needs keys)
+  clerk_flutter: 0.0.15-beta # épinglé : 0.0.14-beta est incompatible avec clerk_auth 0.0.15-beta (handleError/ClerkErrorCode)
 
 dev_dependencies:
   flutter_test:
