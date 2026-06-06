@@ -48,6 +48,38 @@ de vrais comptes/clés. Faites-les dans l'ordre.
   réseau → photo uploadée + doc patché `photoStatus: uploaded`.
 - Page `/presence` du backoffice : heures par technicien, anomalies, hors-rayon.
 
+## Réglages IAM GCP nécessaires (projets neufs) — gotchas rencontrés
+Sur un projet Firebase/GCP récent, deux rôles IAM doivent être ajoutés à la main :
+
+1. **Déploiement des Cloud Functions** — le *compute default service account*
+   (`<PROJECT_NUMBER>-compute@developer.gserviceaccount.com`) doit avoir le rôle
+   **Cloud Build Service Account** (`roles/cloudbuild.builds.builder`), sinon le build
+   échoue (« missing permission on the build service account ») :
+   ```
+   gcloud projects add-iam-policy-binding <PROJECT_ID> \
+     --member="serviceAccount:<PROJECT_NUMBER>-compute@developer.gserviceaccount.com" \
+     --role="roles/cloudbuild.builds.builder"
+   ```
+2. **Lecture Firestore par le backoffice** — le compte
+   `firebase-adminsdk-...@<PROJECT_ID>.iam.gserviceaccount.com` doit avoir le rôle
+   **Utilisateur Cloud Datastore** (`roles/datastore.user`), sinon le SDK Admin
+   renvoie `PERMISSION_DENIED` (code 7) :
+   ```
+   gcloud projects add-iam-policy-binding <PROJECT_ID> \
+     --member="serviceAccount:firebase-adminsdk-...@<PROJECT_ID>.iam.gserviceaccount.com" \
+     --role="roles/datastore.user"
+   ```
+
+Diagnostic Firestore rapide : `cd web && node --env-file=.env.local scripts/check-firestore.mjs`.
+
+## Personnalisation du jeton de session Clerk (pour le rôle côté mobile)
+Pour que le rôle remonte jusqu'à `mintFirebaseToken`, ajouter dans Clerk →
+Configure → Sessions → Customize session token :
+```json
+{ "public_metadata": "{{user.public_metadata}}" }
+```
+(Le backoffice web, lui, lit le rôle via l'API Clerk `clerkClient` — indépendant de ce réglage.)
+
 ## Notes / dette connue
 - **Émulateur Firestore + Java 17 (ce poste)** : un contournement (provider de
   sélecteur NIO forçant le repli TCP) a été nécessaire pour exécuter les tests de
