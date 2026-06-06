@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "332888055815",
+    "project_id": "cameroon-innovation",
+    "storage_bucket": "cameroon-innovation.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:332888055815:android:f177f1236118670a40caa2",
+        "android_client_info": {
+          "package_name": "com.cameroon.innovation.pointage"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSQdOr2iR5oypF39hCY2WKdiyfLNnswbA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
