@@ -1,6 +1,11 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import { verifyClerkJwt, ClerkClaims } from "./clerkVerify";
+
+// Lie le secret au runtime : sans cette déclaration, process.env.CLERK_SECRET_KEY
+// est vide dans une fonction v2 déployée, même si `functions:secrets:set` a été fait.
+const clerkSecretKey = defineSecret("CLERK_SECRET_KEY");
 
 interface AuthLike { createCustomToken(uid: string, claims: object): Promise<string>; }
 
@@ -9,7 +14,7 @@ export async function buildTokenResponse(auth: AuthLike, claims: ClerkClaims) {
   return { firebaseToken };
 }
 
-export const mintFirebaseToken = onCall(async (request) => {
+export const mintFirebaseToken = onCall({ secrets: [clerkSecretKey] }, async (request) => {
   const clerkJwt = request.data?.clerkJwt as string | undefined;
   if (!clerkJwt) throw new HttpsError("invalid-argument", "clerkJwt requis");
   let claims: ClerkClaims;
