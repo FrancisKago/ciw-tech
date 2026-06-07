@@ -22,5 +22,21 @@ service cloud.firestore {
                     && request.resource.data.userId == resource.data.userId;
       allow delete: if false;
     }
+
+    match /tasks/{taskId} {
+      // Champs que l'assigné a le droit de modifier (les autres doivent rester inchangés).
+      function assigneeOnlyChangesAllowed() {
+        return request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['status', 'report', 'updatedAt']);
+      }
+
+      allow create: if isManager()
+                    && request.resource.data.createdBy == request.auth.uid;
+      allow read:   if isManager() || resource.data.assigneeId == request.auth.uid;
+      allow update: if isManager()
+                    || (resource.data.assigneeId == request.auth.uid
+                        && assigneeOnlyChangesAllowed());
+      allow delete: if false;
+    }
   }
 }
