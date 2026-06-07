@@ -45,4 +45,17 @@ void main() {
     expect(called, false);
     expect(find.textContaining('en ligne'), findsOneWidget);
   });
+
+  testWidgets('listes vides : messages explicites + bouton Créer désactivé', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: TaskCreateScreen(
+        sites: const [], technicians: const [], isOnline: true,
+        onCreate: (a, b, c, d, e, f) async {},
+      ),
+    ));
+    expect(find.textContaining('Aucun site'), findsOneWidget);
+    expect(find.textContaining('Aucun technicien'), findsOneWidget);
+    final btn = tester.widget<ElevatedButton>(find.byKey(const Key('create_submit')));
+    expect(btn.onPressed, isNull); // bouton désactivé tant que les listes sont vides
+  });
 }

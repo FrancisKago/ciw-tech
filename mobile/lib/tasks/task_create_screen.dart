@@ -29,6 +29,9 @@ class _TaskCreateScreenState extends State<TaskCreateScreen> {
   String? _error;
   bool _busy = false;
 
+  bool get _canSubmit =>
+      !_busy && widget.sites.isNotEmpty && widget.technicians.isNotEmpty;
+
   @override
   void initState() {
     super.initState();
@@ -69,21 +72,35 @@ class _TaskCreateScreenState extends State<TaskCreateScreen> {
             controller: _desc, maxLines: 3,
             decoration: const InputDecoration(labelText: 'Description')),
           const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            initialValue: _siteId,
-            decoration: const InputDecoration(labelText: 'Site'),
-            items: widget.sites
-                .map((s) => DropdownMenuItem(value: s.id, child: Text(s.name)))
-                .toList(),
-            onChanged: (v) => setState(() => _siteId = v)),
+          if (widget.sites.isEmpty)
+            const ListTile(
+              leading: Icon(Icons.location_off, color: Colors.orange),
+              title: Text('Aucun site disponible'),
+              subtitle: Text('Créez d\'abord un site dans le backoffice.'),
+            )
+          else
+            DropdownButtonFormField<String>(
+              initialValue: _siteId,
+              decoration: const InputDecoration(labelText: 'Site'),
+              items: widget.sites
+                  .map((s) => DropdownMenuItem(value: s.id, child: Text(s.name)))
+                  .toList(),
+              onChanged: (v) => setState(() => _siteId = v)),
           const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            initialValue: _assigneeId,
-            decoration: const InputDecoration(labelText: 'Technicien'),
-            items: widget.technicians
-                .map((t) => DropdownMenuItem(value: t.id, child: Text(t.name)))
-                .toList(),
-            onChanged: (v) => setState(() => _assigneeId = v)),
+          if (widget.technicians.isEmpty)
+            const ListTile(
+              leading: Icon(Icons.person_off, color: Colors.orange),
+              title: Text('Aucun technicien disponible'),
+              subtitle: Text('Un technicien doit s\'être connecté au moins une fois.'),
+            )
+          else
+            DropdownButtonFormField<String>(
+              initialValue: _assigneeId,
+              decoration: const InputDecoration(labelText: 'Technicien'),
+              items: widget.technicians
+                  .map((t) => DropdownMenuItem(value: t.id, child: Text(t.name)))
+                  .toList(),
+              onChanged: (v) => setState(() => _assigneeId = v)),
           const SizedBox(height: 12),
           DropdownButtonFormField<TaskPriority>(
             initialValue: _priority,
@@ -98,7 +115,7 @@ class _TaskCreateScreenState extends State<TaskCreateScreen> {
                 child: Text(_error!, style: const TextStyle(color: Colors.red))),
           ElevatedButton(
             key: const Key('create_submit'),
-            onPressed: _busy ? null : _submit,
+            onPressed: _canSubmit ? _submit : null,
             child: const Text('Créer et assigner')),
         ]),
       ),
