@@ -61,8 +61,11 @@ périodiquement (20 s) + après chaque pointage. Vidanges fusionnées (verrou an
 ## Statut
 - **Phase 0 (fondations + pont auth)** : ✅ fait + déployé + validé sur appareil.
 - **Phase 1 (pointage offline-first)** : ✅ fait + validé de bout en bout (tablette → backoffice).
-- **Phase 2 (tâches + rapports + push FCM)** : ✅ implémenté en TDD (branche `phase-2-taches-rapports-push`).
-  Reste à faire côté toi : déploiement Firebase (`firestore:rules,storage,functions`), tests de règles via émulateur, et validation appareil de bout en bout (manager crée → push → technicien exécute → rapport → web).
+- **Phase 2 (tâches + rapports + push FCM)** : ✅ fait + déployé + **validé de bout en bout sur appareil**
+  (manager crée → push FCM → technicien démarre → rapport+photos → backoffice). Inclut : création de
+  site au backoffice (`/sites`), `mintFirebaseToken` enregistre name+phone, sélecteur de tâche au
+  pointage (siteId hérité). Règles testées via émulateur (11/11). Backoffice web mergé sur `main`
+  (déployer sur Vercel si pas déjà fait).
 - **Phase 3 (suivi backoffice : board, alertes retard, stats)** : à faire.
 - **Phase 4 (durcissement : App Check, anomalies, chemins Storage par user, publication Play Store)** : à faire.
 

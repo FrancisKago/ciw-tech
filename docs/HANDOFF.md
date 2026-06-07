@@ -1,9 +1,10 @@
 # Session Handoff — Cameroon Innovation
 
 **Date :** 2026-06-07
-**État global :** Phases 0 + 1 **terminées et validées sur appareil réel**.
-**Phase 2 (tâches + rapports + push FCM) : implémentée en TDD** sur la branche
-`phase-2-taches-rapports-push` (non encore mergée, non déployée).
+**État global :** Phases 0 + 1 + 2 **terminées, déployées et validées de bout en bout
+sur appareil réel**. Phase 2 mergée sur `main` ; règles + Storage + Functions déployées
+(`onTaskAssigned` en prod) ; parcours manager→push→technicien→rapport→backoffice confirmé.
+Suite logique : Phase 3 (board, alertes, stats + dette « managers = aussi techniciens »).
 
 ## Phase 2 — ce qui a été livré (code)
 Plan exécuté : `docs/superpowers/plans/2026-06-07-phase-2-taches-rapports-push.md`
