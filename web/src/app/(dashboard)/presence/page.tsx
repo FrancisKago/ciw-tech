@@ -44,7 +44,7 @@ export default async function PresencePage() {
               </td>
             </tr>
           ))}
-          {rows.length === 0 && <tr><td colSpan={3} className="py-2 text-gray-400">Aucun pointage aujourd'hui.</td></tr>}
+          {rows.length === 0 && <tr><td colSpan={3} className="py-2 text-gray-400">Aucun pointage aujourd&apos;hui.</td></tr>}
         </tbody>
       </table>
     </div>
