@@ -31,9 +31,12 @@ service cloud.firestore {
       }
 
       // L'assigné ne peut amener le statut que vers in_progress ou done.
-      // 'approved' (validation) reste réservé au manager (Admin SDK backoffice).
+      // Un patch qui laisse le statut inchangé (ex. upload de photo de rapport en
+      // différé, même après validation) est toujours autorisé. 'approved' reste
+      // donc inatteignable par l'assigné (il ne peut pas TRANSITIONNER vers approved).
       function assigneeStatusAllowed() {
-        return request.resource.data.status in ['in_progress', 'done'];
+        return request.resource.data.status == resource.data.status
+               || request.resource.data.status in ['in_progress', 'done'];
       }
 
       allow create: if isManager()

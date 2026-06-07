@@ -112,4 +112,12 @@ describe("règles tasks", () => {
     const db = ctx("mgr", "manager");
     await assertSucceeds(setDoc(doc(db, "tasks/t10"), { ...baseTask, status: "approved" }));
   });
+
+  it("l'assigné peut patcher le rapport sur une tâche validée (statut inchangé)", async () => {
+    await env.withSecurityRulesDisabled((c) =>
+      setDoc(doc(c.firestore(), "tasks/t11"), { ...baseTask, status: "approved" }));
+    const db = ctx("tech_1", "technician");
+    await assertSucceeds(
+      setDoc(doc(db, "tasks/t11"), { report: { photoUrls: ["u"] } }, { merge: true }));
+  });
 });
