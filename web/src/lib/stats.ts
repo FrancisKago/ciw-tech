@@ -59,3 +59,17 @@ export function completionByKey(
   }
   return out;
 }
+
+/** Nombre de tâches en retard par clé ('assigneeId' ou 'siteId'). */
+export function lateCountByKey(
+  tasks: StatsTask[],
+  now: Date,
+  key: "assigneeId" | "siteId",
+): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const t of tasks) {
+    if (!isLate(t, now)) continue;
+    out.set(t[key], (out.get(t[key]) ?? 0) + 1);
+  }
+  return out;
+}
