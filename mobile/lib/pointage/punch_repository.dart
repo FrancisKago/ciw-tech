@@ -15,6 +15,7 @@ class PunchRepository {
     required double accuracy,
     required String? siteId,
     required String photoPath,
+    String? taskId,
     DateTime? now,
   }) async {
     final ref = _fs.collection('punches').doc();
@@ -22,7 +23,7 @@ class PunchRepository {
       id: ref.id, userId: userId, kind: kind,
       clientTimestamp: (now ?? DateTime.now()).toUtc(),
       lat: lat, lng: lng, accuracy: accuracy, siteId: siteId,
-      photoStatus: PhotoStatus.pending,
+      photoStatus: PhotoStatus.pending, taskId: taskId,
     );
     // set() ne bloque pas hors ligne : Firestore met en cache et synchronise plus tard.
     ref.set(punch.toFirestore());

@@ -10,12 +10,14 @@ class PointageScreen extends StatefulWidget {
     super.key, required this.userId, required this.geo, required this.photo,
     required this.repo, required this.pendingCount,
     this.onPunchCreated, this.onSignOut,
+    this.activeTasks = const [],
   });
   final String userId;
   final GeoService geo;
   final PhotoService photo;
   final PunchRepository repo;
   final int pendingCount;
+  final List<({String taskId, String siteId, String title})> activeTasks;
 
   /// Appelé après un pointage réussi pour déclencher la synchro immédiate.
   final Future<void> Function()? onPunchCreated;
@@ -30,6 +32,17 @@ class PointageScreen extends StatefulWidget {
 class _PointageScreenState extends State<PointageScreen> {
   bool _busy = false;
   String? _message;
+  String? _selectedTaskId;
+  String? _selectedSiteId;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.activeTasks.length == 1) {
+      _selectedTaskId = widget.activeTasks.first.taskId;
+      _selectedSiteId = widget.activeTasks.first.siteId;
+    }
+  }
 
   Future<void> _punch(PunchKind kind) async {
     setState(() { _busy = true; _message = null; });
@@ -39,7 +52,8 @@ class _PointageScreenState extends State<PointageScreen> {
       await widget.repo.createPunch(
         userId: widget.userId, kind: kind,
         lat: fix.lat, lng: fix.lng, accuracy: fix.accuracy,
-        siteId: null, photoPath: photoPath,
+        siteId: _selectedSiteId, photoPath: photoPath,
+        taskId: _selectedTaskId,
       );
       await widget.onPunchCreated?.call(); // synchro immédiate de la photo
       if (mounted) setState(() => _message = 'Pointage enregistré ✓');
@@ -87,6 +101,28 @@ class _PointageScreenState extends State<PointageScreen> {
       ),
       body: Center(
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          if (widget.activeTasks.length > 1)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              child: DropdownButton<String>(
+                key: const Key('task_picker'),
+                isExpanded: true,
+                hint: const Text('Sélectionner une tâche'),
+                value: _selectedTaskId,
+                items: widget.activeTasks.map((t) => DropdownMenuItem(
+                  value: t.taskId,
+                  child: Text(t.title),
+                )).toList(),
+                onChanged: (value) {
+                  if (value == null) return;
+                  final task = widget.activeTasks.firstWhere((t) => t.taskId == value);
+                  setState(() {
+                    _selectedTaskId = task.taskId;
+                    _selectedSiteId = task.siteId;
+                  });
+                },
+              ),
+            ),
           ElevatedButton.icon(
             onPressed: _busy ? null : () => _punch(PunchKind.checkIn),
             icon: const Icon(Icons.login), label: const Text('Arrivée'),

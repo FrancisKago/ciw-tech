@@ -16,7 +16,7 @@ class Punch {
     required this.id, required this.userId, required this.kind,
     required this.clientTimestamp, required this.lat, required this.lng,
     required this.accuracy, required this.siteId, required this.photoStatus,
-    this.photoUrl,
+    this.photoUrl, this.taskId,
   });
   final String id;
   final String userId;
@@ -26,6 +26,7 @@ class Punch {
   final String? siteId;
   final PhotoStatus photoStatus;
   final String? photoUrl;
+  final String? taskId;
 
   Map<String, dynamic> toFirestore() => {
         'userId': userId,
@@ -36,5 +37,6 @@ class Punch {
         'siteId': siteId,
         'photoStatus': photoStatus.wire,
         if (photoUrl != null) 'photoUrl': photoUrl,
+        if (taskId != null) 'taskId': taskId,
       };
 }

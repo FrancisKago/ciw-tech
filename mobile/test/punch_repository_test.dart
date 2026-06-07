@@ -27,4 +27,18 @@ void main() {
     expect(pending.single.localPath, '/tmp/a.jpg');
     await outbox.close();
   });
+
+  test('createPunch enregistre le taskId fourni', () async {
+    final fs = FakeFirebaseFirestore();
+    final outbox = OutboxDb.memory();
+    final repo = PunchRepository(fs, outbox);
+    final id = await repo.createPunch(
+      userId: 'u1', kind: PunchKind.checkIn,
+      lat: 4, lng: 9, accuracy: 10, siteId: 's1',
+      photoPath: '/tmp/a.jpg', taskId: 't1');
+    final doc = await fs.collection('punches').doc(id).get();
+    expect(doc.data()!['taskId'], 't1');
+    expect(doc.data()!['siteId'], 's1');
+    await outbox.close();
+  });
 }

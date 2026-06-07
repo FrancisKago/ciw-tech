@@ -21,4 +21,14 @@ void main() {
     expect(PunchKind.checkOut.wire, 'out');
     expect(PunchKindX.fromWire('in'), PunchKind.checkIn);
   });
+
+  test('toFirestore inclut taskId quand fourni', () {
+    final p = Punch(
+      id: 'p1', userId: 'u1', kind: PunchKind.checkIn,
+      clientTimestamp: DateTime.utc(2026, 6, 7), lat: 4, lng: 9, accuracy: 5,
+      siteId: 's1', photoStatus: PhotoStatus.pending, taskId: 't1',
+    );
+    expect(p.toFirestore()['taskId'], 't1');
+    expect(p.toFirestore()['siteId'], 's1');
+  });
 }
