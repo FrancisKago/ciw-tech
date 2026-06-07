@@ -33,7 +33,8 @@ périodiquement (20 s) + après chaque pointage. Vidanges fusionnées (verrou an
 - `users/{userId}` (userId = id Clerk) : name, phone, role, active, fcmTokens[]
 - `sites/{siteId}` : name, geo{lat,lng}, radiusMeters
 - `punches/{punchId}` : userId, kind(in/out), clientTimestamp, serverTimestamp, geo{lat,lng,accuracy}, photoUrl, photoStatus, siteId
-- `tasks/{taskId}` : (Phase 2) title, description, siteId, assigneeId, priority, dueAt, status, attachments[], report{...}
+- `tasks/{taskId}` : title, description, siteId, assigneeId, createdBy, priority, dueAt,
+  status(assigned/in_progress/done/approved), report{...}, approvedBy, approvedAt, updatedAt
 
 ## Versions épinglées (ne pas « mettre à jour » sans raison)
 - `flutter_riverpod: ^2.5.0` (3.x casse avec drift_dev via test_api)
@@ -73,6 +74,11 @@ périodiquement (20 s) + après chaque pointage. Vidanges fusionnées (verrou an
   Tests 39/39, `tsc`/`eslint`/`next build` OK. **Reste côté user : déployer sur Vercel.** Reporté :
   cycle #4 (boucle manager : écriture statut, `done → approved`, push retour → ouvre l'écriture
   backoffice + revue des règles) et cycle #5 (dette mobile « managers = aussi techniciens »).
+- **Cycle #4 (boucle manager : validation)** : ✅ livré (code). Backoffice : vue détail de
+  tâche (rapport + photos) + bouton Valider (Server Action, `done → approved`). Cloud Function
+  `onTaskUpdated` (push technicien→manager à la soumission, manager→technicien à la validation).
+  Règles durcies (l'assigné ne peut plus poser `approved`). **Reste côté user : déployer
+  `firestore:rules` + `functions`, lancer les tests de règles (émulateur), valider sur appareil.**
 - **Phase 4 (durcissement : App Check, anomalies, chemins Storage par user, publication Play Store)** : à faire.
 
 Voir **docs/HANDOFF.md** pour reprendre exactement où on en est.
