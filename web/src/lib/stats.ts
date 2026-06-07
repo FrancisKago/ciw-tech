@@ -2,7 +2,7 @@ import { computeWorkedMinutes, PunchLite } from "@/lib/hours";
 import { isLate } from "@/lib/board";
 
 export interface StatsPunch { userId: string; kind: "in" | "out"; at: Date; siteId: string; }
-export interface StatsTask { assigneeId: string; siteId: string; status: string; dueAt: Date | null; }
+export interface StatsTask { assigneeId: string; siteId: string; status: string; dueAt: Date | null; createdAt: Date | null; }
 
 export type PeriodKey = "today" | "7d" | "30d";
 export interface Period { period: PeriodKey; start: Date; end: Date; }
@@ -40,8 +40,17 @@ function inRange(d: Date | null, start: Date, end: Date): boolean {
 }
 
 /**
+ * Une tâche appartient à la période par son échéance si elle en a une, sinon par sa date
+ * de création. (Sans cela, une tâche sans `dueAt` serait invisible dans les stats.)
+ */
+function taskInPeriod(t: StatsTask, start: Date, end: Date): boolean {
+  return t.dueAt != null ? inRange(t.dueAt, start, end) : inRange(t.createdAt, start, end);
+}
+
+/**
  * Taux de complétion par clé ('assigneeId' ou 'siteId').
- * Périmètre = tâches dont l'échéance tombe dans la période. done/approved comptent comme terminées.
+ * Périmètre = tâches rattachées à la période (échéance, ou création à défaut d'échéance).
+ * done/approved comptent comme terminées.
  */
 export function completionByKey(
   tasks: StatsTask[],
@@ -50,7 +59,7 @@ export function completionByKey(
 ): Map<string, { done: number; total: number }> {
   const out = new Map<string, { done: number; total: number }>();
   for (const t of tasks) {
-    if (!inRange(t.dueAt, range.start, range.end)) continue;
+    if (!taskInPeriod(t, range.start, range.end)) continue;
     const k = t[key];
     const cur = out.get(k) ?? { done: 0, total: 0 };
     cur.total += 1;

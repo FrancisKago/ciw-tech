@@ -4,12 +4,13 @@
 **État global :** Phases 0 + 1 + 2 **terminées, déployées et validées de bout en bout
 sur appareil réel**. Phase 2 mergée sur `main` ; règles + Storage + Functions déployées
 (`onTaskAssigned` en prod) ; parcours manager→push→technicien→rapport→backoffice confirmé.
-**Phase 3 (backoffice de suivi) : livrée côté code** sur la branche
-`phase-3-suivi-backoffice` (navigation sidebar + résolution des noms + board lecture seule
-+ stats période glissante). Lecture seule, aucun changement de règles Firestore. Validée
-par `npx jest` (39/39), `npx tsc --noEmit`, `npx eslint .` et `npx next build` (routes
-`/board` et `/stats` générées). **À faire côté toi :** relire/merger la branche, puis
-déployer le backoffice sur Vercel.
+**Phase 3 (backoffice de suivi) : livrée + mergée sur `main`** (navigation sidebar,
+résolution des noms, board lecture seule, stats période glissante) — **+ 3 correctifs
+post-livraison mergés** (noms depuis Clerk, stats comptant les tâches sans échéance, filtre
+de période sur Présence). Lecture seule, aucun changement de règles Firestore. Validée par
+`npx jest` (47/47), `npx tsc --noEmit`, `npx eslint .`, `npx next build`. **À faire côté
+toi :** déployer le backoffice sur **Vercel** (toujours non configuré côté Claude) ; `main`
+local est en avance sur `origin/main` après push — vérifier le déclenchement Vercel.
 
 ## Phase 2 — ce qui a été livré (code)
 Plan exécuté : `docs/superpowers/plans/2026-06-07-phase-2-taches-rapports-push.md`
@@ -90,27 +91,37 @@ Plan exécuté : `docs/superpowers/plans/2026-06-07-phase-2-taches-rapports-push
   un test de non-régression. Correctifs réels appliqués : mémoïsation du rôle, cycle de vie
   de la souscription FCM, garde `assigneeId` dans la Function.
 
-## Phase 3 — livré (code), branche `phase-3-suivi-backoffice`
-Brainstorming + spec + plan + exécution complète (subagent-driven, 14 tâches, TDD).
+## Phase 3 — livré + mergé sur `main`
+Brainstorming + spec + plan + exécution complète (subagent-driven, 14 tâches, TDD), mergé,
+puis 3 correctifs post-livraison (issus du test sur appareil) également mergés.
 Spec : `docs/superpowers/specs/2026-06-07-phase-3-suivi-backoffice-design.md`.
 Plan : `docs/superpowers/plans/2026-06-07-phase-3-suivi-backoffice.md`.
 
-- **Logique pure (testée jest)** : `web/src/lib/directory.ts` (résolution noms users/sites),
-  `web/src/lib/board.ts` (`groupByStatus`, `isLate`), `web/src/lib/stats.ts`
+- **Logique pure (testée jest)** : `web/src/lib/directory.ts` (`clerkDisplayName` + résolution
+  noms), `web/src/lib/board.ts` (`groupByStatus`, `isLate`), `web/src/lib/stats.ts`
   (`parsePeriod`, `hoursPerTechnician`, `completionByKey`, `lateCountByKey`, `hoursPerSite`).
 - **Coquille** : `web/src/components/Sidebar.tsx` (nav, lien actif) + `web/src/app/(dashboard)/layout.tsx`
   (role gate **centralisé** — retiré des pages individuelles).
 - **Pages** : `(dashboard)/board/page.tsx` (3 colonnes par statut, retards en rouge,
   filtres site/technicien — **lecture seule**), `(dashboard)/stats/page.tsx` (période
   today/7d/30d ; heures + complétion + retards + anomalies par technicien et par site).
-- **Refactor** : `presence` et `tasks` affichent désormais des **noms** (plus d'IDs) et
-  délèguent le gate au layout.
-- **Tests** : `npx jest` 39/39 ; `npx tsc --noEmit` propre ; `npx eslint .` propre ;
+- **Refactor** : `presence` (noms + **sélecteur de période**) et `tasks` (noms) délèguent le
+  gate au layout.
+- **Correctifs post-livraison** :
+  1. **Noms depuis Clerk** — les docs Firestore `users` n'ont pas toujours de champ `name`
+     (profil Clerk sans prénom/nom) ; `loadDirectory` lit le nom via `clerkClient`
+     (`clerkDisplayName` : prénom+nom → username → email → id). Affichait l'uid brut avant.
+  2. **Stats comptent les tâches sans échéance** — `completionByKey` rattache une tâche par
+     `dueAt`, ou par `createdAt` à défaut (sinon une tâche sans échéance était invisible).
+  3. **Filtre de période sur Présence** (aujourd'hui/7j/30j) — prévu par la spec, manquait.
+- **Tests** : `npx jest` **47/47** ; `npx tsc --noEmit` propre ; `npx eslint .` propre ;
   `npx next build` OK (routes `/board` et `/stats`).
+- **Observation données** : les `punches` peuvent avoir `siteId=null` (pointage sans tâche
+  active → pas d'héritage du site) → ligne « Sans site » dans les stats. Vrai correctif =
+  cycle #5 (rattacher le pointage à une tâche côté mobile).
 
 ### Reste à faire côté toi (Phase 3)
-1. Relire la branche `phase-3-suivi-backoffice` puis la merger sur `main`.
-2. Déployer le backoffice sur **Vercel** (toujours non configuré côté Claude).
+1. Déployer le backoffice sur **Vercel** (toujours non configuré côté Claude).
 
 ### Reporté aux cycles suivants
 - **Cycle #4 — boucle manager** : board interactif (écriture du statut), validation
@@ -122,5 +133,6 @@ Plan : `docs/superpowers/plans/2026-06-07-phase-3-suivi-backoffice.md`.
   période en `<a>` plutôt que `<Link>` — sans impact fonctionnel.
 
 ## Pour reprendre
-1. Lire `CLAUDE.md` + ce fichier. 2. `git checkout phase-3-suivi-backoffice`.
-3. Dérouler « Reste à faire côté toi (Phase 3) » ci-dessus.
+1. Lire `CLAUDE.md` + ce fichier (tout est sur `main`).
+2. Déployer Vercel (reste à faire), ou démarrer le **cycle #4** (boucle manager) /
+   **cycle #5** (managers = aussi techniciens) — voir « Reporté aux cycles suivants ».

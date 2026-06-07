@@ -44,7 +44,7 @@ describe("hoursPerTechnician", () => {
 
 const range = { start: new Date(Date.UTC(2026, 5, 1)), end: new Date(Date.UTC(2026, 5, 30)) };
 const sTask = (over: Partial<StatsTask>): StatsTask =>
-  ({ assigneeId: "u1", siteId: "s1", status: "assigned", dueAt: new Date(Date.UTC(2026, 5, 10)), ...over });
+  ({ assigneeId: "u1", siteId: "s1", status: "assigned", dueAt: new Date(Date.UTC(2026, 5, 10)), createdAt: null, ...over });
 
 describe("completionByKey", () => {
   it("compte done/total par technicien sur les tâches dont l'échéance tombe dans la période", () => {
@@ -56,12 +56,17 @@ describe("completionByKey", () => {
     expect(map.get("u1")).toEqual({ done: 1, total: 2 });
     expect(map.get("u2")).toEqual({ done: 1, total: 1 });
   });
-  it("ignore les tâches sans échéance ou hors période", () => {
-    const map = completionByKey([
-      sTask({ dueAt: null }),
-      sTask({ dueAt: new Date(Date.UTC(2026, 0, 1)) }),
-    ], range, "assigneeId");
+  it("ignore une tâche dont l'échéance est hors de la période", () => {
+    const map = completionByKey([sTask({ dueAt: new Date(Date.UTC(2026, 0, 1)) })], range, "assigneeId");
     expect(map.size).toBe(0);
+  });
+  it("rattache une tâche sans échéance par sa date de création", () => {
+    const map = completionByKey([
+      sTask({ status: "done", dueAt: null, createdAt: new Date(Date.UTC(2026, 5, 15)) }),   // créée dans la période
+      sTask({ status: "assigned", dueAt: null, createdAt: new Date(Date.UTC(2026, 0, 1)) }), // créée hors période
+      sTask({ status: "assigned", dueAt: null, createdAt: null }),                           // ni échéance ni création
+    ], range, "assigneeId");
+    expect(map.get("u1")).toEqual({ done: 1, total: 1 }); // seule la 1re est rattachée
   });
   it("peut agréger par site", () => {
     const map = completionByKey([sTask({ siteId: "s9", status: "done" })], range, "siteId");
