@@ -19,3 +19,6 @@ firebase/.runtimeconfig.json
 firebase/*-debug.log
 *-debug.log
 firebase/firestore-debug.log
+
+# Maquettes brainstorming (compagnon visuel)
+.superpowers/
