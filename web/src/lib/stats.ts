@@ -19,3 +19,18 @@ export function parsePeriod(raw: string | undefined, now: Date): Period {
   if (raw === "30d") return { period: "30d", start: new Date(now.getTime() - 30 * DAY), end: now };
   return { period: "7d", start: new Date(now.getTime() - 7 * DAY), end: now };
 }
+
+/** Regroupe les pointages par technicien et calcule minutes + anomalies pour chacun. */
+export function hoursPerTechnician(
+  punches: StatsPunch[],
+): Map<string, { minutes: number; anomalies: string[] }> {
+  const byUser = new Map<string, PunchLite[]>();
+  for (const p of punches) {
+    const list = byUser.get(p.userId) ?? [];
+    list.push({ kind: p.kind, at: p.at });
+    byUser.set(p.userId, list);
+  }
+  const out = new Map<string, { minutes: number; anomalies: string[] }>();
+  for (const [uid, list] of byUser) out.set(uid, computeWorkedMinutes(list));
+  return out;
+}
