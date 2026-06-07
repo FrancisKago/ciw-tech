@@ -124,15 +124,35 @@ Plan : `docs/superpowers/plans/2026-06-07-phase-3-suivi-backoffice.md`.
 1. Déployer le backoffice sur **Vercel** (toujours non configuré côté Claude).
 
 ### Reporté aux cycles suivants
-- **Cycle #4 — boucle manager** : board interactif (écriture du statut), validation
-  `done → approved`, push retour à la soumission de rapport. **Implique d'ouvrir l'écriture
-  backoffice + une revue des `firestore.rules`** (la Phase 3 est restée 100 % lecture seule).
+- **Cycle #4** — livré (voir section « Cycle #4 — livré » ci-dessous).
 - **Cycle #5 — dette mobile « managers = aussi techniciens »** : laisser un manager pointer
   et s'auto-assigner des tâches (revoir `HomeShell` + écran de création côté Flutter).
 - **Dette cosmétique notée à la revue** : `<main>` imbriqué (root layout + pages), liens
   période en `<a>` plutôt que `<Link>` — sans impact fonctionnel.
 
+## Cycle #4 — boucle manager (validation) : livré (code)
+Spec : `docs/superpowers/specs/2026-06-07-cycle-4-boucle-manager-design.md`.
+Plan : `docs/superpowers/plans/2026-06-07-cycle-4-boucle-manager.md`.
+
+- **Functions** : `onTaskUpdated.ts` — un trigger `onDocumentUpdated('tasks/{taskId}')` route
+  deux push (→done : au createdBy/manager ; →approved : à l'assigneeId/technicien), réutilise
+  `splitInvalidTokens`. Tests jest verts.
+- **Règles** : l'assigné ne peut poser `status` que dans {in_progress, done} ; `approved`
+  réservé au manager. Tests de règles ajoutés (à lancer via l'émulateur).
+- **Web** : `mapTaskDoc` étendu (détail rapport + approvedBy/approvedAt) ; garde pure
+  `canApprove` ; Server Action `approveTask` (re-check rôle serveur + transaction garde
+  `status==='done'`) ; route détail `(dashboard)/board/[taskId]` (rapport + photos + Valider) ;
+  cartes board cliquables + badges « à valider » / « ✓ validé ». `jest`/`tsc`/`eslint`/`next build` OK.
+- **Mobile** : `TaskStatus.approved` en lecture seule (libellé « validé », aucune action).
+
+### Reste à faire côté toi (Cycle #4)
+1. `cd firebase && firebase deploy --only firestore:rules,functions` (vérifier `onTaskUpdated`).
+2. Tests de règles : `firebase emulators:exec --only firestore "cd functions && npx jest rules"`.
+3. Déployer le backoffice sur Vercel.
+4. Valider sur appareil : technicien clôture → manager reçoit le push → ouvre le détail au
+   backoffice → Valider → technicien reçoit le push de validation.
+
 ## Pour reprendre
 1. Lire `CLAUDE.md` + ce fichier (tout est sur `main`).
-2. Déployer Vercel (reste à faire), ou démarrer le **cycle #4** (boucle manager) /
-   **cycle #5** (managers = aussi techniciens) — voir « Reporté aux cycles suivants ».
+2. Déployer Vercel (reste à faire), ou démarrer le **cycle #5** (managers = aussi techniciens)
+   — voir « Reporté aux cycles suivants ».

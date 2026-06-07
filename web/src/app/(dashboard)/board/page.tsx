@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { db } from "@/lib/firebaseAdmin";
 import { loadDirectory, displayUser, displaySite, Directory } from "@/lib/directory";
 import { groupByStatus, isLate, BoardTask, BoardColumns } from "@/lib/board";
@@ -84,9 +85,10 @@ export default async function BoardPage({
 
 function Card({ task, dir, late }: { task: BoardTask; dir: Directory; late: boolean }) {
   return (
-    <div
+    <Link
+      href={`/board/${task.id}`}
       className={
-        "rounded-lg border bg-white p-3 shadow-sm " +
+        "block rounded-lg border bg-white p-3 shadow-sm hover:shadow " +
         (late ? "border-l-4 border-l-red-600" : "border-gray-200")
       }
     >
@@ -101,10 +103,18 @@ function Card({ task, dir, late }: { task: BoardTask; dir: Directory; late: bool
       ) : (
         <div className="mt-1 text-xs text-gray-500">
           Échéance : {fmt(task.dueAt)}
-          {task.hasReport && <span className="ml-2 text-green-700">✓ rapport</span>}
+          {task.status === "approved" && (
+            <span className="ml-2 font-semibold text-green-700">✓ validé</span>
+          )}
+          {task.status === "done" && (
+            <span className="ml-2 font-semibold text-amber-600">à valider</span>
+          )}
+          {task.status !== "approved" && task.status !== "done" && task.hasReport && (
+            <span className="ml-2 text-green-700">✓ rapport</span>
+          )}
         </div>
       )}
-    </div>
+    </Link>
   );
 }
 

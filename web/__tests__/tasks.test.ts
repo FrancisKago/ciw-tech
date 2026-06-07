@@ -20,4 +20,34 @@ describe("mapTaskDoc", () => {
     });
     expect(row.hasReport).toBe(false);
   });
+
+  it("projette le détail du rapport et les champs de validation", () => {
+    const row = mapTaskDoc("t3", {
+      title: "Réparer", siteId: "s1", assigneeId: "tech_1", createdBy: "mgr",
+      status: "approved", dueAt: null,
+      report: {
+        text: "RAS", minutesSpent: 45, photoUrls: ["https://x/a.jpg"], photoCount: 1,
+        submittedAt: { toDate: () => new Date("2026-06-07T10:00:00Z") },
+      },
+      approvedBy: "mgr",
+      approvedAt: { toDate: () => new Date("2026-06-07T12:00:00Z") },
+    });
+    expect(row.createdBy).toBe("mgr");
+    expect(row.report?.text).toBe("RAS");
+    expect(row.report?.minutesSpent).toBe(45);
+    expect(row.report?.photoUrls).toEqual(["https://x/a.jpg"]);
+    expect(row.report?.submittedAt).toBe("2026-06-07T10:00:00.000Z");
+    expect(row.approvedBy).toBe("mgr");
+    expect(row.approvedAt).toBe("2026-06-07T12:00:00.000Z");
+  });
+
+  it("report=null quand absent (détail null, hasReport false)", () => {
+    const row = mapTaskDoc("t4", {
+      title: "X", siteId: "s1", assigneeId: "tech_1", status: "assigned",
+      dueAt: null, report: null,
+    });
+    expect(row.report).toBeNull();
+    expect(row.hasReport).toBe(false);
+    expect(row.approvedBy).toBeNull();
+  });
 });

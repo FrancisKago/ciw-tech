@@ -33,4 +33,9 @@ void main() {
     expect(t.status, TaskStatus.inProgress);
     expect(t.priority, TaskPriority.low);
   });
+
+  test('fromWire reconnaît approved (lecture seule)', () {
+    expect(TaskStatusX.fromWire('approved'), TaskStatus.approved);
+    expect(TaskStatus.approved.wire, 'approved');
+  });
 }
