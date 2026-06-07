@@ -48,6 +48,7 @@ dependencies:
   path: ^1.9.1
   connectivity_plus: ^7.1.1
   clerk_flutter: 0.0.14-beta # tandem complet : 0.0.15-beta est publié sans ses fichiers l10n generes ; 0.0.14 les contient
+  firebase_messaging: ^16.3.0
 
 # Force clerk_auth sur le meme tandem que clerk_flutter 0.0.14-beta.
 # Sinon pub tire clerk_auth 0.0.15-beta (transitif) -> incompatibilite handleError/ClerkErrorCode.
