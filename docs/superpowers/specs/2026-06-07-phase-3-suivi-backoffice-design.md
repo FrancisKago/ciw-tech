@@ -58,9 +58,15 @@ ses pages — ce cycle corrige cela.
 - `web/src/app/(dashboard)/layout.tsx` — coquille sidebar + role gate centralisé.
 - `web/src/components/Sidebar.tsx` — liens de navigation (Présence / Tâches / Board /
   Stats / Sites), lien actif surligné.
-- `web/src/lib/directory.ts` — `loadDirectory(db)` → `{ users: Map, sites: Map }` ;
-  `displayUser(uid, dir)` / `displaySite(id, dir)` avec repli sur l'ID. **Helpers purs,
-  testables.**
+- `web/src/lib/directory.ts` — `loadDirectory(db)` → `{ users: Map, sites: Map }` : **noms
+  d'utilisateurs résolus depuis Clerk** (source d'identité — `clerkDisplayName` = prénom+nom
+  → username → email → id), sites depuis Firestore. `displayUser(uid, dir)` /
+  `displaySite(id, dir)` (« Sans site » si pas de `siteId`, repli sur l'ID sinon).
+  `clerkDisplayName` + helpers d'affichage **purs, testables** (import dynamique de
+  `clerkClient` pour garder le module testable en env node).
+  > Décision révisée après livraison : les docs Firestore `users` n'ont pas toujours de champ
+  > `name` (profil Clerk sans prénom/nom → `mintFirebaseToken` l'omet). Lire le nom depuis
+  > Clerk est robuste et aligné sur « Clerk = source d'identité ».
 - `web/src/lib/board.ts` — `groupByStatus(tasks)` → colonnes ; `isLate(task, now)`.
   **Purs, testables.**
 - `web/src/app/(dashboard)/board/page.tsx` — Server Component : charge `tasks` + directory,
@@ -72,7 +78,9 @@ ses pages — ce cycle corrige cela.
 
 ### Modifiés
 - `web/src/app/(dashboard)/presence/page.tsx` — noms résolus (au lieu de l'`uid`),
-  suppression du role gate dupliqué (désormais dans le layout), habillage Tailwind léger.
+  **sélecteur de période (aujourd'hui / 7 j / 30 j, défaut aujourd'hui)** calculant les heures
+  sur la période choisie, suppression du role gate dupliqué (désormais dans le layout),
+  habillage Tailwind léger.
 - `web/src/app/(dashboard)/tasks/page.tsx` — noms résolus (site + assigné), suppression du
   role gate dupliqué, habillage Tailwind léger.
 
@@ -93,8 +101,8 @@ ses pages — ce cycle corrige cela.
 4. `stats.ts` calcule en mémoire :
    - **Heures pointées** par technicien (via `computeWorkedMinutes`).
    - **Anomalies** par technicien (bonus, déjà détecté par `computeWorkedMinutes`).
-   - **Taux de complétion** = tâches `done` / tâches dont `dueAt ∈ [start, end]`,
-     par technicien et par site.
+   - **Taux de complétion** = tâches `done` / tâches **rattachées à la période** (par `dueAt`
+     si présent, sinon par `createdAt`), par technicien et par site.
    - **Tâches en retard** = `dueAt < now` ET statut ∈ {assigned, in_progress},
      comptées par technicien et par site (point-dans-le-temps, indépendant de la période).
    - **Activité par site** (bonus) = heures pointées + nb de tâches, agrégées par site.
@@ -104,9 +112,10 @@ ses pages — ce cycle corrige cela.
 
 - **En retard** : `dueAt < maintenant` ET statut ∈ {`assigned`, `in_progress`}
   (une tâche `done` n'est jamais « en retard »).
-- **Taux de complétion sur la période** : numérateur = tâches `done` dont `dueAt ∈ période` ;
-  dénominateur = toutes les tâches dont `dueAt ∈ période`. (Choix explicite : on rattache
-  une tâche à la période par son échéance, pas par sa date de création.)
+- **Taux de complétion sur la période** : numérateur = tâches `done` rattachées à la période ;
+  dénominateur = toutes les tâches rattachées à la période. **Rattachement** : par l'échéance
+  `dueAt` si la tâche en a une, sinon par sa date de création `createdAt` (correctif
+  post-livraison — sans quoi une tâche sans échéance était invisible dans les stats).
 - **Statuts de tâche** : `assigned`, `in_progress`, `done` (le futur `approved` relève du
   cycle #4 ; s'il apparaît, il est traité comme « terminé » à l'affichage).
 
