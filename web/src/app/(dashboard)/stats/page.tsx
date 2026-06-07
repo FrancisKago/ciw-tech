@@ -40,6 +40,7 @@ export default async function StatsPage({
       siteId: data.siteId ?? "",
       status: data.status ?? "assigned",
       dueAt: data.dueAt ? data.dueAt.toDate() : null,
+      createdAt: data.createdAt ? data.createdAt.toDate() : null,
     };
   });
 
