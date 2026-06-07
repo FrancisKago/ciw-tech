@@ -91,4 +91,25 @@ describe("règles tasks", () => {
     await assertFails(setDoc(doc(db, "tasks/t7"),
       { ...baseTask, assigneeId: "tech_1_autre" }));
   });
+
+  it("l'assigné peut passer status à done", async () => {
+    await env.withSecurityRulesDisabled((c) =>
+      setDoc(doc(c.firestore(), "tasks/t8"), { ...baseTask, status: "in_progress" }));
+    const db = ctx("tech_1", "technician");
+    await assertSucceeds(setDoc(doc(db, "tasks/t8"), { ...baseTask, status: "done" }));
+  });
+
+  it("l'assigné ne peut PAS s'auto-valider (approved)", async () => {
+    await env.withSecurityRulesDisabled((c) =>
+      setDoc(doc(c.firestore(), "tasks/t9"), { ...baseTask, status: "done" }));
+    const db = ctx("tech_1", "technician");
+    await assertFails(setDoc(doc(db, "tasks/t9"), { ...baseTask, status: "approved" }));
+  });
+
+  it("un manager peut valider (approved)", async () => {
+    await env.withSecurityRulesDisabled((c) =>
+      setDoc(doc(c.firestore(), "tasks/t10"), { ...baseTask, status: "done" }));
+    const db = ctx("mgr", "manager");
+    await assertSucceeds(setDoc(doc(db, "tasks/t10"), { ...baseTask, status: "approved" }));
+  });
 });

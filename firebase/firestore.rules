@@ -30,12 +30,19 @@ service cloud.firestore {
                  .hasOnly(['status', 'report', 'updatedAt']);
       }
 
+      // L'assigné ne peut amener le statut que vers in_progress ou done.
+      // 'approved' (validation) reste réservé au manager (Admin SDK backoffice).
+      function assigneeStatusAllowed() {
+        return request.resource.data.status in ['in_progress', 'done'];
+      }
+
       allow create: if isManager()
                     && request.resource.data.createdBy == request.auth.uid;
       allow read:   if isManager() || resource.data.assigneeId == request.auth.uid;
       allow update: if isManager()
                     || (resource.data.assigneeId == request.auth.uid
-                        && assigneeOnlyChangesAllowed());
+                        && assigneeOnlyChangesAllowed()
+                        && assigneeStatusAllowed());
       allow delete: if false;
     }
   }
