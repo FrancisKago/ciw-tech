@@ -39,6 +39,7 @@ class TaskDetailScreen extends StatelessWidget {
           onPressed: onClose,
           icon: const Icon(Icons.check), label: const Text('Clôturer')),
       TaskStatus.done => null,
+      TaskStatus.approved => null,
     };
     if (button == null) return null;
     return SafeArea(

@@ -5,6 +5,7 @@ String statusLabel(TaskStatus s) => switch (s) {
       TaskStatus.assigned => 'assigné',
       TaskStatus.inProgress => 'en cours',
       TaskStatus.done => 'terminé',
+      TaskStatus.approved => 'validé',
     };
 
 class TasksListScreen extends StatelessWidget {

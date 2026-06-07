@@ -1,15 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-enum TaskStatus { assigned, inProgress, done }
+enum TaskStatus { assigned, inProgress, done, approved }
 extension TaskStatusX on TaskStatus {
   String get wire => switch (this) {
         TaskStatus.assigned => 'assigned',
         TaskStatus.inProgress => 'in_progress',
         TaskStatus.done => 'done',
+        TaskStatus.approved => 'approved',
       };
   static TaskStatus fromWire(String w) => switch (w) {
         'in_progress' => TaskStatus.inProgress,
         'done' => TaskStatus.done,
+        'approved' => TaskStatus.approved,
         _ => TaskStatus.assigned,
       };
 }
