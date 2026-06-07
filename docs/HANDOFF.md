@@ -1,55 +1,76 @@
 # Session Handoff — Cameroon Innovation
 
 **Date :** 2026-06-07
-**État global :** Phases 0 + 1 **terminées et validées de bout en bout sur appareil réel**
-(tablette Samsung SM X115 → backoffice). L'app de pointage est fonctionnelle.
+**État global :** Phases 0 + 1 **terminées et validées sur appareil réel**.
+**Phase 2 (tâches + rapports + push FCM) : implémentée en TDD** sur la branche
+`phase-2-taches-rapports-push` (non encore mergée, non déployée).
 
-## Ce qui a été livré cette session
-1. **Conception + plan** : `docs/superpowers/specs/2026-06-05-...-design.md`,
-   `docs/superpowers/plans/2026-06-05-cameroon-innovation-phases-0-1.md`.
-2. **Code Phases 0+1** (mobile + web + firebase), en TDD, ~27 tests verts.
-3. **Mise en service réelle** : projet Firebase `cameroon-innovation` (Blaze),
-   Clerk, déploiement règles/fonction/Storage, comptes de service, IAM.
-4. **Validation terrain** : connexion Clerk→Firebase, pointage GPS+photo offline,
-   synchro auto, affichage backoffice — tout confirmé sur la tablette.
+## Phase 2 — ce qui a été livré (code)
+Plan exécuté : `docs/superpowers/plans/2026-06-07-phase-2-taches-rapports-push.md`
+(design : `docs/superpowers/specs/2026-06-07-phase-2-taches-rapports-push-design.md`).
 
-## Réglages de mise en service effectués (détail dans docs/SETUP.md)
-- Firebase Blaze + APIs activées ; secret `CLERK_SECRET_KEY` posé.
-- IAM : compute SA → `cloudbuild.builds.builder`, `iam.serviceAccountTokenCreator`,
-  `datastore.user` ; adminsdk SA → `datastore.user` ; Cloud Run `mintfirebasetoken`
-  → `allUsers`/`run.invoker`.
-- Firebase **Authentication activé** (sinon `CONFIGURATION_NOT_FOUND`).
-- Clerk : rôle `admin` mis sur le compte direction (`publicMetadata.role`).
-  ⚠️ **À faire pour le mobile** : personnaliser le jeton de session Clerk avec
-  `{ "public_metadata": "{{user.public_metadata}}" }` pour que le rôle remonte au pont.
+- **Firebase**
+  - `firestore.rules` : collection `tasks` (create manager+createdBy, read manager|assigné,
+    update borné pour l'assigné à `status`/`report`/`updatedAt`, delete interdit).
+  - `storage.rules` : `tasks/{taskId}/report/{file}` (write réservé à l'assigné via
+    `firestore.get`, read signé). Syntaxe validée par `firebase deploy --only storage --dry-run`.
+  - `functions/src/tasks/onTaskAssigned.ts` : trigger `onDocumentCreated('tasks/{taskId}')`
+    → push FCM multicast au technicien + purge des tokens invalides. Helpers purs testés (jest).
+- **Mobile (Flutter)**
+  - `models/task.dart` (Task/TaskReport/TaskStatus/TaskPriority) ; `Punch.taskId` ajouté.
+  - Outbox Drift **généralisé** : table `PendingUploads(kind: punch|report)`, **migration
+    schemaVersion 1→2** (étapes SQL exposées + testées) ; `OutboxUploader` route punch/report.
+  - `tasks/task_repository.dart` (créer, start, submitReport offline, streams par rôle).
+  - `notifications/fcm_service.dart` (enregistrement token, arrayUnion idempotent).
+  - Écrans : `home_shell` (navigation role-gatée), `tasks_list`, `task_detail`,
+    `task_report`, `task_create` (garde « en ligne »).
+  - Pointage rattaché à la **tâche active** → hérite du `siteId` (résout la dette hors-rayon).
+  - Câblage : rôle lu via `getIdTokenResult`, FCM démarré après le pont auth, navigation
+    branchée (`firebase_auth_gate.dart`, `main.dart`).
+  - Permission Android `POST_NOTIFICATIONS`.
+- **Web (lecture seule)** : `src/app/(dashboard)/tasks/page.tsx` (table serveur Firebase
+  Admin, role-gatée comme `presence`, aucune écriture) + `src/lib/tasks.ts` (`mapTaskDoc`).
 
-## Secrets / config locale (NON commités, à recréer si besoin)
-- `web/.env.local` : clés Clerk + compte de service Firebase.
-- `firebase/functions` secret `CLERK_SECRET_KEY` (Secret Manager).
-- `mobile/android/app/google-services.json` + `mobile/lib/firebase_options.dart`
-  (générés par `flutterfire configure` ; google-services.json est commité, c'est toléré).
-- Clé publishable Clerk passée au run : `--dart-define=CLERK_PUBLISHABLE_KEY=pk_test_...`
-  (récupérable dans Clerk → API Keys, aussi dans web/.env.local).
+## État des tests
+- **Mobile** : `flutter analyze` propre, `flutter test` **38/38 vert**.
+- **Functions (unitaires)** : `npx jest` **6/6** (onTaskAssigned, mintFirebaseToken, clerkVerify).
+- **Web** : `npx jest` **12/12** ; `npx next build` OK (route `/tasks`).
+- **Règles Firestore** : tests écrits (`functions/test/rules.test.ts`) mais **non exécutés
+  ici** — l'émulateur Firestore ne démarre pas sur ce poste (dette socket Netty/Java 17,
+  cf. `docs/SETUP.md`). **À lancer dans ton terminal** :
+  `cd firebase && firebase emulators:exec --only firestore "cd functions && npx jest rules"`.
 
-## Dette connue / à reprendre
-- **Relancer `flutter run`** une fois pour intégrer le verrou anti-concurrence outbox
-  (déjà commité) et `kotlin.incremental=false` (build plus propre).
-- **Phase 4 — App Check** : non configuré (`No AppCheckProvider installed` dans les logs).
-  À ajouter pour verrouiller l'accès au backend.
-- **Phase 4 — chemins Storage par utilisateur** : aujourd'hui `punches/{punchId}.jpg`
-  avec write pour tout utilisateur connecté ; passer à `punches/{userId}/{punchId}.jpg`.
-- **Phase 4 — calcul hors-rayon** : `isOutsideSite` prêt côté web mais `siteId` est nul
-  au pointage (pas encore d'affectation site→technicien ; viendra avec les tâches).
+## Reste à faire côté toi (Tâche 18 du plan)
+1. **Relire/merger la branche** `phase-2-taches-rapports-push` sur `main`.
+2. **Tests de règles** via l'émulateur (commande ci-dessus).
+3. **Déployer** : `cd firebase && firebase deploy --only firestore:rules,storage,functions`
+   (vérifier que `onTaskAssigned` apparaît dans la liste des fonctions).
+4. **Prérequis push** : le jeton de session Clerk doit exposer
+   `{ "public_metadata": "{{user.public_metadata}}" }` pour que le rôle remonte au pont
+   (sinon navigation role-gatée → `technician` par défaut).
+5. **Build/validation appareil** depuis ton terminal (Claude ne peut pas builder l'APK) :
+   ```
+   cd "D:\App pointage\mobile"
+   flutter run -d <device> --dart-define=CLERK_PUBLISHABLE_KEY=pk_test_...
+   ```
+   Parcours : compte manager crée une tâche (en ligne) → le technicien reçoit le push →
+   *Démarrer* → pointe en sélectionnant la tâche (siteId hérité) → *Clôturer* avec rapport
+   + photos → photos montées au retour réseau (`report.photoUrls`) → tâche + rapport
+   visibles au backoffice web.
 
-## Prochaine étape : Phase 2 (tâches + rapports + notifications push)
-- Manager (mobile) : créer/assigner des tâches (titre, description, site, échéance, priorité, pièces jointes).
-- Technicien (mobile) : recevoir (push FCM), passer in_progress, rapport (texte + photos + statut + temps passé).
-- Cloud Function : trigger FCM à l'assignation.
-- Ouvrir les règles Storage pour les pièces jointes tâches/rapports.
-- Démarrer par un brainstorming léger → plan → exécution (même cycle que Phase 1).
+## Dette / notes connues
+- `mobile/lib/outbox/outbox_db.g.dart` est **maintenu à la main** (build_runner inopérant
+  sur Dart 3.10 ici : `'dart compile' does not support build hooks`). Prouvé correct par
+  les tests Drift. Si tu disposes d'un poste où build_runner tourne, une régénération
+  canonique est possible (devrait être un no-op).
+- App Check (Phase 4) toujours non configuré.
+- Chemins Storage par user pour les pointages (`punches/{userId}/...`) : Phase 4.
+
+## Phase 3 (suite) — amorce
+Suivi backoffice complet : board des tâches (drag statut), alertes retard (échéances),
+stats par technicien/site, et boucle de retour manager (push à la soumission de rapport,
+validation `done → approved`). Voir le périmètre reporté dans le design Phase 2.
 
 ## Pour reprendre
-1. Lire `CLAUDE.md` (mémoire projet) + ce fichier.
-2. `git pull` (remote : https://github.com/FrancisKago/ciw-tech).
-3. Vérifier l'état : `cd mobile && flutter test` ; `cd web && npx jest`.
-4. Lancer `/gsd-...` ou brainstorming pour la Phase 2.
+1. Lire `CLAUDE.md` + ce fichier. 2. `git checkout phase-2-taches-rapports-push`.
+3. Dérouler « Reste à faire côté toi » ci-dessus.
