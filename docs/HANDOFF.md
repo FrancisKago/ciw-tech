@@ -65,6 +65,13 @@ Plan exécuté : `docs/superpowers/plans/2026-06-07-phase-2-taches-rapports-push
   canonique est possible (devrait être un no-op).
 - App Check (Phase 4) toujours non configuré.
 - Chemins Storage par user pour les pointages (`punches/{userId}/...`) : Phase 4.
+- **Optimisation (Phase 3)** : `firebase_auth_gate` ouvre deux listeners Firestore sur
+  `tasksForAssignee(uid)` (onglet pointage + onglet « Mes tâches »). Coût négligeable à
+  cette échelle ; à mutualiser (un seul stream broadcast) lors du refactor board Phase 3.
+- **Revue de code** : la revue finale avait signalé un risque de perte des champs frères du
+  rapport ; vérifié **faux positif** (`set(merge:true)` deep-merge les maps). Verrouillé par
+  un test de non-régression. Correctifs réels appliqués : mémoïsation du rôle, cycle de vie
+  de la souscription FCM, garde `assigneeId` dans la Function.
 
 ## Phase 3 (suite) — amorce
 Suivi backoffice complet : board des tâches (drag statut), alertes retard (échéances),
