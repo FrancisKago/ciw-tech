@@ -16,8 +16,18 @@ service firebase.storage {
       allow read: if isManager();
     }
 
-    // Tout le reste reste verrouillé (les pièces jointes tâches/rapports
-    // seront ouvertes en phase 2).
+    // Pièces jointes de rapport : `tasks/{taskId}/report/{fileName}`.
+    // Écriture réservée à l'assigné de la tâche (vérifié via le doc Firestore) ;
+    // lecture par tout utilisateur connecté (managers/admins consultent au backoffice).
+    match /tasks/{taskId}/report/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn()
+        && request.resource.size < 10 * 1024 * 1024
+        && firestore.get(/databases/(default)/documents/tasks/$(taskId)).data.assigneeId
+           == request.auth.uid;
+    }
+
+    // Tout le reste reste verrouillé.
     match /{allPaths=**} {
       allow read, write: if false;
     }
