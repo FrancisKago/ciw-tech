@@ -105,6 +105,48 @@ Configure → Sessions → Customize session token :
   bornés sous les lignes à hooks natifs (incompatibles build_runner sur Dart 3.10).
   Commentaires explicatifs dans `mobile/pubspec.yaml`.
 
+## Déploiement Firebase — pièges rencontrés (à relire avant tout `firebase deploy`)
+
+### 1. PowerShell : la virgule casse `--only` (toujours mettre entre guillemets)
+En **Windows PowerShell**, la virgule est l'opérateur *tableau*. Sans guillemets,
+`--only firestore:rules,storage,functions` est découpé en 3 arguments → seul
+`firestore:rules` est pris en compte (Storage et Functions sont silencieusement sautés).
+**Toujours quoter** la valeur :
+```powershell
+firebase deploy --only "firestore:rules,storage,functions"
+```
+(Vaut aussi pour `--only "hosting,functions"`, etc. Et `&&` n'existe pas : enchaîner
+avec `;` ou `cmd1; if ($?) { cmd2 }`.)
+
+### 2. Premier déploiement d'une fonction 2nd-gen à trigger (Eventarc)
+`onTaskAssigned` est déclenchée par Firestore → fonction 2nd-gen + Eventarc. Le 1er
+déploiement échoue souvent sur :
+- **« missing permission on the build service account »** : depuis 2024, le compte
+  de build (compute SA `<PROJECT_NUMBER>-compute@developer.gserviceaccount.com`) ne
+  reçoit plus ses droits de build par défaut. Lui accorder (console IAM
+  `console.cloud.google.com/iam-admin/iam` → GRANT ACCESS, ou `gcloud`) :
+  - `roles/cloudbuild.builds.builder` (parapluie : build + Artifact Registry + logs)
+  - `roles/artifactregistry.writer`, `roles/logging.logWriter`
+  - `roles/eventarc.eventReceiver`, `roles/run.invoker`
+- **« first time using 2nd gen … retry in a few minutes »** : propagation du Service
+  Agent Eventarc → attendre 2-3 min et relancer.
+- En cas de doute sur la permission exacte : ouvrir le **log Cloud Build** (lien donné
+  dans l'erreur) — il nomme la permission/SA manquant.
+
+### 3. « Changing from an HTTPS function to a background triggered function is not allowed »
+Un déploiement précédent partiel laisse `onTaskAssigned` en type HTTPS. Firebase refuse
+la conversion en place → **supprimer puis recréer** :
+```powershell
+firebase functions:delete onTaskAssigned --region us-central1 --force
+firebase deploy --only functions
+```
+
+### 4. Prérequis push (FCM)
+`onTaskAssigned` lit `users/{assigneeId}.fcmTokens`. Un technicien qui n'a **jamais
+ouvert l'app** depuis le déploiement n'a pas de token → pas de push. Pour valider :
+ouvrir l'app **en technicien d'abord** (enregistre le token + accepter la permission
+`POST_NOTIFICATIONS` sur Android 13+), **puis** créer la tâche en manager.
+
 ## État des tests (au moment de la livraison)
 - Cloud Functions : 4 tests purs + 4 tests de règles (émulateur) ✓
 - Backoffice web : 6 tests (heures, géo) ✓
