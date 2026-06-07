@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
@@ -6,6 +7,7 @@ class FcmService {
   FcmService(this._fs, [this._messaging]);
   final FirebaseFirestore _fs;
   final FirebaseMessaging? _messaging;
+  StreamSubscription<String>? _tokenSub;
 
   /// Écrit le token (idempotent via arrayUnion).
   Future<void> registerToken(String userId, String token) =>
@@ -21,6 +23,14 @@ class FcmService {
     await messaging.requestPermission();
     final token = await messaging.getToken();
     if (token != null) await registerToken(userId, token);
-    messaging.onTokenRefresh.listen((t) => registerToken(userId, t));
+    // Évite une souscription en double si start() est rappelé (ex. re-login).
+    await _tokenSub?.cancel();
+    _tokenSub = messaging.onTokenRefresh.listen((t) => registerToken(userId, t));
+  }
+
+  /// Coupe l'écoute des rotations de token (à appeler à la déconnexion si besoin).
+  Future<void> dispose() async {
+    await _tokenSub?.cancel();
+    _tokenSub = null;
   }
 }

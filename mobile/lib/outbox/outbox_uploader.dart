@@ -40,6 +40,10 @@ class OutboxUploader {
           try {
             final url = await _upload(item.kind, item.ownerId, item.localPath);
             if (item.kind == 'report') {
+              // set(merge:true) fait un *deep merge* des maps imbriquées : seul
+              // report.photoUrls est touché (arrayUnion), les champs frères
+              // report.text/minutesSpent/photoCount écrits par submitReport sont
+              // préservés. (Test outbox_uploader : vérifie la non-régression.)
               await _fs.collection('tasks').doc(item.ownerId).set(
                 {'report': {'photoUrls': FieldValue.arrayUnion([url])}},
                 SetOptions(merge: true),

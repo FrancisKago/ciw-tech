@@ -50,6 +50,10 @@ class _FirebaseAuthGateState extends State<FirebaseAuthGate> {
   bool _started = false;
   Object? _error;
   bool _fcmStarted = false;
+  // Le future de rôle est mémoïsé par uid : sans ça, chaque rebuild (ex. emission
+  // de pendingCountStream) rappellerait getIdTokenResult et ferait clignoter l'UI.
+  Future<String>? _roleFuture;
+  String? _roleUid;
 
   @override
   void initState() {
@@ -210,8 +214,13 @@ class _FirebaseAuthGateState extends State<FirebaseAuthGate> {
             ),
           );
         }
+        if (_roleUid != user.uid) {
+          _roleUid = user.uid;
+          _roleFuture = _role(user);
+          _fcmStarted = false; // nouveau compte → (ré)enregistrer le token FCM
+        }
         return FutureBuilder<String>(
-          future: _role(user),
+          future: _roleFuture,
           builder: (context, roleSnap) {
             if (!roleSnap.hasData) {
               return const Scaffold(body: Center(child: CircularProgressIndicator()));

@@ -32,8 +32,9 @@ export function splitInvalidTokens(tokens: string[], responses: SendResponse[]) 
 export const onTaskAssigned = onDocumentCreated("tasks/{taskId}", async (event) => {
   const snap = event.data;
   if (!snap) return;
-  const task = snap.data() as TaskLite & { assigneeId: string };
+  const task = snap.data() as TaskLite & { assigneeId?: string };
   const taskId = event.params.taskId;
+  if (!task.assigneeId) return; // tâche sans assigné : rien à notifier
 
   const userSnap = await admin.firestore().doc(`users/${task.assigneeId}`).get();
   const tokens: string[] = userSnap.get("fcmTokens") ?? [];
