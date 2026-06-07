@@ -69,4 +69,21 @@ void main() {
     expect(list.length, 1);
     expect(list.single.id, 't1');
   });
+
+  test('watchTask suit le statut de la tâche', () async {
+    final fs = FakeFirebaseFirestore();
+    final repo = TaskRepository(fs, OutboxDb.memory());
+    await fs.collection('tasks').doc('t1').set({
+      'title': 'a', 'assigneeId': 'tech_1', 'createdBy': 'mgr',
+      'siteId': 's1', 'priority': 'normal', 'status': 'assigned', 'report': null,
+      'description': '',
+    });
+
+    final first = await repo.watchTask('t1').first;
+    expect(first!.status, TaskStatus.assigned);
+
+    await repo.startTask('t1');
+    final after = await repo.watchTask('t1').first;
+    expect(after!.status, TaskStatus.inProgress);
+  });
 }

@@ -97,28 +97,36 @@ class _FirebaseAuthGateState extends State<FirebaseAuthGate> {
     return (res.claims?['role'] as String?) ?? 'technician';
   }
 
-  void _openTask(BuildContext context, Task t) {
+  void _openTask(BuildContext context, Task initial) {
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => TaskDetailScreen(
-        task: t,
-        onStart: () => widget.taskRepo.startTask(t.id),
-        onClose: () {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => TaskReportScreen(
-              pickPhoto: () async {
-                try {
-                  return await PhotoService().capture();
-                } on PhotoCancelled {
-                  return null;
-                }
-              },
-              onSubmit: (text, minutes, photos) async {
-                await widget.taskRepo.submitReport(
-                    taskId: t.id, text: text, minutesSpent: minutes, photoPaths: photos);
-                await widget.onSyncNow();
-              },
-            ),
-          ));
+      // Détail réactif : suit le statut en direct (après Démarrer → Clôturer apparaît).
+      builder: (_) => StreamBuilder<Task?>(
+        stream: widget.taskRepo.watchTask(initial.id),
+        initialData: initial,
+        builder: (context, snap) {
+          final t = snap.data ?? initial;
+          return TaskDetailScreen(
+            task: t,
+            onStart: () => widget.taskRepo.startTask(t.id),
+            onClose: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => TaskReportScreen(
+                  pickPhoto: () async {
+                    try {
+                      return await PhotoService().capture();
+                    } on PhotoCancelled {
+                      return null;
+                    }
+                  },
+                  onSubmit: (text, minutes, photos) async {
+                    await widget.taskRepo.submitReport(
+                        taskId: t.id, text: text, minutesSpent: minutes, photoPaths: photos);
+                    await widget.onSyncNow();
+                  },
+                ),
+              ));
+            },
+          );
         },
       ),
     ));

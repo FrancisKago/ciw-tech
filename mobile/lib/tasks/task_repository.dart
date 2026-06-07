@@ -70,4 +70,8 @@ class TaskRepository {
       .where('createdBy', isEqualTo: userId)
       .snapshots()
       .map((s) => s.docs.map((d) => Task.fromMap(d.id, d.data())).toList());
+
+  /// Observe une tâche unique (pour un écran détail réactif : le bouton suit le statut).
+  Stream<Task?> watchTask(String taskId) => _col.doc(taskId).snapshots().map(
+      (d) => d.exists ? Task.fromMap(d.id, d.data()!) : null);
 }
