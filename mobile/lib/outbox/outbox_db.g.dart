@@ -3,18 +3,40 @@
 part of 'outbox_db.dart';
 
 // ignore_for_file: type=lint
-class $PendingPhotosTable extends PendingPhotos
-    with TableInfo<$PendingPhotosTable, PendingPhoto> {
+class $PendingUploadsTable extends PendingUploads
+    with TableInfo<$PendingUploadsTable, PendingUpload> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $PendingPhotosTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _punchIdMeta = const VerificationMeta(
-    'punchId',
+  $PendingUploadsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta(
+    'id',
   );
   @override
-  late final GeneratedColumn<String> punchId = GeneratedColumn<String>(
-    'punch_id',
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta(
+    'kind',
+  );
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ownerIdMeta = const VerificationMeta(
+    'ownerId',
+  );
+  @override
+  late final GeneratedColumn<String> ownerId = GeneratedColumn<String>(
+    'owner_id',
     aliasedName,
     false,
     type: DriftSqlType.string,
@@ -44,26 +66,42 @@ class $PendingPhotosTable extends PendingPhotos
     defaultValue: const Constant(0),
   );
   @override
-  List<GeneratedColumn> get $columns => [punchId, localPath, attempts];
+  List<GeneratedColumn> get $columns => [id, kind, ownerId, localPath, attempts];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'pending_photos';
+  static const String $name = 'pending_uploads';
   @override
   VerificationContext validateIntegrity(
-    Insertable<PendingPhoto> instance, {
+    Insertable<PendingUpload> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('punch_id')) {
+    if (data.containsKey('id')) {
       context.handle(
-        _punchIdMeta,
-        punchId.isAcceptableOrUnknown(data['punch_id']!, _punchIdMeta),
+        _idMeta,
+        id.isAcceptableOrUnknown(data['id']!, _idMeta),
       );
     } else if (isInserting) {
-      context.missing(_punchIdMeta);
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('owner_id')) {
+      context.handle(
+        _ownerIdMeta,
+        ownerId.isAcceptableOrUnknown(data['owner_id']!, _ownerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ownerIdMeta);
     }
     if (data.containsKey('local_path')) {
       context.handle(
@@ -83,14 +121,22 @@ class $PendingPhotosTable extends PendingPhotos
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {punchId};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  PendingPhoto map(Map<String, dynamic> data, {String? tablePrefix}) {
+  PendingUpload map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return PendingPhoto(
-      punchId: attachedDatabase.typeMapping.read(
+    return PendingUpload(
+      id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}punch_id'],
+        data['${effectivePrefix}id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      ownerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner_id'],
       )!,
       localPath: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -104,44 +150,54 @@ class $PendingPhotosTable extends PendingPhotos
   }
 
   @override
-  $PendingPhotosTable createAlias(String alias) {
-    return $PendingPhotosTable(attachedDatabase, alias);
+  $PendingUploadsTable createAlias(String alias) {
+    return $PendingUploadsTable(attachedDatabase, alias);
   }
 }
 
-class PendingPhoto extends DataClass implements Insertable<PendingPhoto> {
-  final String punchId;
+class PendingUpload extends DataClass implements Insertable<PendingUpload> {
+  final String id;
+  final String kind;
+  final String ownerId;
   final String localPath;
   final int attempts;
-  const PendingPhoto({
-    required this.punchId,
+  const PendingUpload({
+    required this.id,
+    required this.kind,
+    required this.ownerId,
     required this.localPath,
     required this.attempts,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['punch_id'] = Variable<String>(punchId);
+    map['id'] = Variable<String>(id);
+    map['kind'] = Variable<String>(kind);
+    map['owner_id'] = Variable<String>(ownerId);
     map['local_path'] = Variable<String>(localPath);
     map['attempts'] = Variable<int>(attempts);
     return map;
   }
 
-  PendingPhotosCompanion toCompanion(bool nullToAbsent) {
-    return PendingPhotosCompanion(
-      punchId: Value(punchId),
+  PendingUploadsCompanion toCompanion(bool nullToAbsent) {
+    return PendingUploadsCompanion(
+      id: Value(id),
+      kind: Value(kind),
+      ownerId: Value(ownerId),
       localPath: Value(localPath),
       attempts: Value(attempts),
     );
   }
 
-  factory PendingPhoto.fromJson(
+  factory PendingUpload.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return PendingPhoto(
-      punchId: serializer.fromJson<String>(json['punchId']),
+    return PendingUpload(
+      id: serializer.fromJson<String>(json['id']),
+      kind: serializer.fromJson<String>(json['kind']),
+      ownerId: serializer.fromJson<String>(json['ownerId']),
       localPath: serializer.fromJson<String>(json['localPath']),
       attempts: serializer.fromJson<int>(json['attempts']),
     );
@@ -150,21 +206,32 @@ class PendingPhoto extends DataClass implements Insertable<PendingPhoto> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'punchId': serializer.toJson<String>(punchId),
+      'id': serializer.toJson<String>(id),
+      'kind': serializer.toJson<String>(kind),
+      'ownerId': serializer.toJson<String>(ownerId),
       'localPath': serializer.toJson<String>(localPath),
       'attempts': serializer.toJson<int>(attempts),
     };
   }
 
-  PendingPhoto copyWith({String? punchId, String? localPath, int? attempts}) =>
-      PendingPhoto(
-        punchId: punchId ?? this.punchId,
-        localPath: localPath ?? this.localPath,
-        attempts: attempts ?? this.attempts,
-      );
-  PendingPhoto copyWithCompanion(PendingPhotosCompanion data) {
-    return PendingPhoto(
-      punchId: data.punchId.present ? data.punchId.value : this.punchId,
+  PendingUpload copyWith({
+    String? id,
+    String? kind,
+    String? ownerId,
+    String? localPath,
+    int? attempts,
+  }) => PendingUpload(
+    id: id ?? this.id,
+    kind: kind ?? this.kind,
+    ownerId: ownerId ?? this.ownerId,
+    localPath: localPath ?? this.localPath,
+    attempts: attempts ?? this.attempts,
+  );
+  PendingUpload copyWithCompanion(PendingUploadsCompanion data) {
+    return PendingUpload(
+      id: data.id.present ? data.id.value : this.id,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      ownerId: data.ownerId.present ? data.ownerId.value : this.ownerId,
       localPath: data.localPath.present ? data.localPath.value : this.localPath,
       attempts: data.attempts.present ? data.attempts.value : this.attempts,
     );
@@ -172,8 +239,10 @@ class PendingPhoto extends DataClass implements Insertable<PendingPhoto> {
 
   @override
   String toString() {
-    return (StringBuffer('PendingPhoto(')
-          ..write('punchId: $punchId, ')
+    return (StringBuffer('PendingUpload(')
+          ..write('id: $id, ')
+          ..write('kind: $kind, ')
+          ..write('ownerId: $ownerId, ')
           ..write('localPath: $localPath, ')
           ..write('attempts: $attempts')
           ..write(')'))
@@ -181,56 +250,74 @@ class PendingPhoto extends DataClass implements Insertable<PendingPhoto> {
   }
 
   @override
-  int get hashCode => Object.hash(punchId, localPath, attempts);
+  int get hashCode => Object.hash(id, kind, ownerId, localPath, attempts);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is PendingPhoto &&
-          other.punchId == this.punchId &&
+      (other is PendingUpload &&
+          other.id == this.id &&
+          other.kind == this.kind &&
+          other.ownerId == this.ownerId &&
           other.localPath == this.localPath &&
           other.attempts == this.attempts);
 }
 
-class PendingPhotosCompanion extends UpdateCompanion<PendingPhoto> {
-  final Value<String> punchId;
+class PendingUploadsCompanion extends UpdateCompanion<PendingUpload> {
+  final Value<String> id;
+  final Value<String> kind;
+  final Value<String> ownerId;
   final Value<String> localPath;
   final Value<int> attempts;
   final Value<int> rowid;
-  const PendingPhotosCompanion({
-    this.punchId = const Value.absent(),
+  const PendingUploadsCompanion({
+    this.id = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.ownerId = const Value.absent(),
     this.localPath = const Value.absent(),
     this.attempts = const Value.absent(),
     this.rowid = const Value.absent(),
   });
-  PendingPhotosCompanion.insert({
-    required String punchId,
+  PendingUploadsCompanion.insert({
+    required String id,
+    required String kind,
+    required String ownerId,
     required String localPath,
     this.attempts = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : punchId = Value(punchId),
+  }) : id = Value(id),
+       kind = Value(kind),
+       ownerId = Value(ownerId),
        localPath = Value(localPath);
-  static Insertable<PendingPhoto> custom({
-    Expression<String>? punchId,
+  static Insertable<PendingUpload> custom({
+    Expression<String>? id,
+    Expression<String>? kind,
+    Expression<String>? ownerId,
     Expression<String>? localPath,
     Expression<int>? attempts,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (punchId != null) 'punch_id': punchId,
+      if (id != null) 'id': id,
+      if (kind != null) 'kind': kind,
+      if (ownerId != null) 'owner_id': ownerId,
       if (localPath != null) 'local_path': localPath,
       if (attempts != null) 'attempts': attempts,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
-  PendingPhotosCompanion copyWith({
-    Value<String>? punchId,
+  PendingUploadsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? kind,
+    Value<String>? ownerId,
     Value<String>? localPath,
     Value<int>? attempts,
     Value<int>? rowid,
   }) {
-    return PendingPhotosCompanion(
-      punchId: punchId ?? this.punchId,
+    return PendingUploadsCompanion(
+      id: id ?? this.id,
+      kind: kind ?? this.kind,
+      ownerId: ownerId ?? this.ownerId,
       localPath: localPath ?? this.localPath,
       attempts: attempts ?? this.attempts,
       rowid: rowid ?? this.rowid,
@@ -240,8 +327,14 @@ class PendingPhotosCompanion extends UpdateCompanion<PendingPhoto> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (punchId.present) {
-      map['punch_id'] = Variable<String>(punchId.value);
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (ownerId.present) {
+      map['owner_id'] = Variable<String>(ownerId.value);
     }
     if (localPath.present) {
       map['local_path'] = Variable<String>(localPath.value);
@@ -257,8 +350,10 @@ class PendingPhotosCompanion extends UpdateCompanion<PendingPhoto> {
 
   @override
   String toString() {
-    return (StringBuffer('PendingPhotosCompanion(')
-          ..write('punchId: $punchId, ')
+    return (StringBuffer('PendingUploadsCompanion(')
+          ..write('id: $id, ')
+          ..write('kind: $kind, ')
+          ..write('ownerId: $ownerId, ')
           ..write('localPath: $localPath, ')
           ..write('attempts: $attempts, ')
           ..write('rowid: $rowid')
@@ -270,40 +365,54 @@ class PendingPhotosCompanion extends UpdateCompanion<PendingPhoto> {
 abstract class _$OutboxDb extends GeneratedDatabase {
   _$OutboxDb(QueryExecutor e) : super(e);
   $OutboxDbManager get managers => $OutboxDbManager(this);
-  late final $PendingPhotosTable pendingPhotos = $PendingPhotosTable(this);
+  late final $PendingUploadsTable pendingUploads = $PendingUploadsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [pendingPhotos];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [pendingUploads];
 }
 
-typedef $$PendingPhotosTableCreateCompanionBuilder =
-    PendingPhotosCompanion Function({
-      required String punchId,
+typedef $$PendingUploadsTableCreateCompanionBuilder =
+    PendingUploadsCompanion Function({
+      required String id,
+      required String kind,
+      required String ownerId,
       required String localPath,
       Value<int> attempts,
       Value<int> rowid,
     });
-typedef $$PendingPhotosTableUpdateCompanionBuilder =
-    PendingPhotosCompanion Function({
-      Value<String> punchId,
+typedef $$PendingUploadsTableUpdateCompanionBuilder =
+    PendingUploadsCompanion Function({
+      Value<String> id,
+      Value<String> kind,
+      Value<String> ownerId,
       Value<String> localPath,
       Value<int> attempts,
       Value<int> rowid,
     });
 
-class $$PendingPhotosTableFilterComposer
-    extends Composer<_$OutboxDb, $PendingPhotosTable> {
-  $$PendingPhotosTableFilterComposer({
+class $$PendingUploadsTableFilterComposer
+    extends Composer<_$OutboxDb, $PendingUploadsTable> {
+  $$PendingUploadsTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get punchId => $composableBuilder(
-    column: $table.punchId,
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ownerId => $composableBuilder(
+    column: $table.ownerId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -318,17 +427,27 @@ class $$PendingPhotosTableFilterComposer
   );
 }
 
-class $$PendingPhotosTableOrderingComposer
-    extends Composer<_$OutboxDb, $PendingPhotosTable> {
-  $$PendingPhotosTableOrderingComposer({
+class $$PendingUploadsTableOrderingComposer
+    extends Composer<_$OutboxDb, $PendingUploadsTable> {
+  $$PendingUploadsTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get punchId => $composableBuilder(
-    column: $table.punchId,
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ownerId => $composableBuilder(
+    column: $table.ownerId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -343,17 +462,23 @@ class $$PendingPhotosTableOrderingComposer
   );
 }
 
-class $$PendingPhotosTableAnnotationComposer
-    extends Composer<_$OutboxDb, $PendingPhotosTable> {
-  $$PendingPhotosTableAnnotationComposer({
+class $$PendingUploadsTableAnnotationComposer
+    extends Composer<_$OutboxDb, $PendingUploadsTable> {
+  $$PendingUploadsTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get punchId =>
-      $composableBuilder(column: $table.punchId, builder: (column) => column);
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get ownerId =>
+      $composableBuilder(column: $table.ownerId, builder: (column) => column);
 
   GeneratedColumn<String> get localPath =>
       $composableBuilder(column: $table.localPath, builder: (column) => column);
@@ -362,55 +487,63 @@ class $$PendingPhotosTableAnnotationComposer
       $composableBuilder(column: $table.attempts, builder: (column) => column);
 }
 
-class $$PendingPhotosTableTableManager
+class $$PendingUploadsTableTableManager
     extends
         RootTableManager<
           _$OutboxDb,
-          $PendingPhotosTable,
-          PendingPhoto,
-          $$PendingPhotosTableFilterComposer,
-          $$PendingPhotosTableOrderingComposer,
-          $$PendingPhotosTableAnnotationComposer,
-          $$PendingPhotosTableCreateCompanionBuilder,
-          $$PendingPhotosTableUpdateCompanionBuilder,
+          $PendingUploadsTable,
+          PendingUpload,
+          $$PendingUploadsTableFilterComposer,
+          $$PendingUploadsTableOrderingComposer,
+          $$PendingUploadsTableAnnotationComposer,
+          $$PendingUploadsTableCreateCompanionBuilder,
+          $$PendingUploadsTableUpdateCompanionBuilder,
           (
-            PendingPhoto,
-            BaseReferences<_$OutboxDb, $PendingPhotosTable, PendingPhoto>,
+            PendingUpload,
+            BaseReferences<_$OutboxDb, $PendingUploadsTable, PendingUpload>,
           ),
-          PendingPhoto,
+          PendingUpload,
           PrefetchHooks Function()
         > {
-  $$PendingPhotosTableTableManager(_$OutboxDb db, $PendingPhotosTable table)
+  $$PendingUploadsTableTableManager(_$OutboxDb db, $PendingUploadsTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$PendingPhotosTableFilterComposer($db: db, $table: table),
+              $$PendingUploadsTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$PendingPhotosTableOrderingComposer($db: db, $table: table),
+              $$PendingUploadsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$PendingPhotosTableAnnotationComposer($db: db, $table: table),
+              $$PendingUploadsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<String> punchId = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String> ownerId = const Value.absent(),
                 Value<String> localPath = const Value.absent(),
                 Value<int> attempts = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => PendingPhotosCompanion(
-                punchId: punchId,
+              }) => PendingUploadsCompanion(
+                id: id,
+                kind: kind,
+                ownerId: ownerId,
                 localPath: localPath,
                 attempts: attempts,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                required String punchId,
+                required String id,
+                required String kind,
+                required String ownerId,
                 required String localPath,
                 Value<int> attempts = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => PendingPhotosCompanion.insert(
-                punchId: punchId,
+              }) => PendingUploadsCompanion.insert(
+                id: id,
+                kind: kind,
+                ownerId: ownerId,
                 localPath: localPath,
                 attempts: attempts,
                 rowid: rowid,
@@ -423,27 +556,27 @@ class $$PendingPhotosTableTableManager
       );
 }
 
-typedef $$PendingPhotosTableProcessedTableManager =
+typedef $$PendingUploadsTableProcessedTableManager =
     ProcessedTableManager<
       _$OutboxDb,
-      $PendingPhotosTable,
-      PendingPhoto,
-      $$PendingPhotosTableFilterComposer,
-      $$PendingPhotosTableOrderingComposer,
-      $$PendingPhotosTableAnnotationComposer,
-      $$PendingPhotosTableCreateCompanionBuilder,
-      $$PendingPhotosTableUpdateCompanionBuilder,
+      $PendingUploadsTable,
+      PendingUpload,
+      $$PendingUploadsTableFilterComposer,
+      $$PendingUploadsTableOrderingComposer,
+      $$PendingUploadsTableAnnotationComposer,
+      $$PendingUploadsTableCreateCompanionBuilder,
+      $$PendingUploadsTableUpdateCompanionBuilder,
       (
-        PendingPhoto,
-        BaseReferences<_$OutboxDb, $PendingPhotosTable, PendingPhoto>,
+        PendingUpload,
+        BaseReferences<_$OutboxDb, $PendingUploadsTable, PendingUpload>,
       ),
-      PendingPhoto,
+      PendingUpload,
       PrefetchHooks Function()
     >;
 
 class $OutboxDbManager {
   final _$OutboxDb _db;
   $OutboxDbManager(this._db);
-  $$PendingPhotosTableTableManager get pendingPhotos =>
-      $$PendingPhotosTableTableManager(_db, _db.pendingPhotos);
+  $$PendingUploadsTableTableManager get pendingUploads =>
+      $$PendingUploadsTableTableManager(_db, _db.pendingUploads);
 }
