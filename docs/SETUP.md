@@ -72,6 +72,20 @@ Sur un projet Firebase/GCP récent, deux rôles IAM doivent être ajoutés à la
 
 Diagnostic Firestore rapide : `cd web && node --env-file=.env.local scripts/check-firestore.mjs`.
 
+3. **Appel public de la fonction `mintFirebaseToken`** — la fonction (Cloud Run, 2ᵉ gen)
+   doit autoriser les appels non authentifiés, car l'app l'appelle AVANT d'avoir une
+   identité Firebase. Console Cloud Run → service `mintfirebasetoken` → ajouter le
+   principal `allUsers` avec le rôle **Demandeur Cloud Run** (`roles/run.invoker`).
+   Sinon : `firebase_functions/permission-denied`.
+4. **Compte d'exécution de la fonction** (`<PROJECT_NUMBER>-compute@developer.gserviceaccount.com`)
+   doit avoir DEUX rôles, sinon `firebase_functions/internal` :
+   - **Créateur de jetons du compte de service** (`roles/iam.serviceAccountTokenCreator`) — pour `createCustomToken` ;
+   - **Utilisateur Cloud Datastore** (`roles/datastore.user`) — pour l'écriture `users/{id}`.
+
+## Activer Firebase Authentication
+Console Firebase → **Authentication** → **Get started** (crée la configuration).
+Sinon la connexion par jeton personnalisé échoue avec `CONFIGURATION_NOT_FOUND`.
+
 ## Personnalisation du jeton de session Clerk (pour le rôle côté mobile)
 Pour que le rôle remonte jusqu'à `mintFirebaseToken`, ajouter dans Clerk →
 Configure → Sessions → Customize session token :
