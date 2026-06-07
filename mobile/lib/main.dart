@@ -9,6 +9,8 @@ import 'outbox/outbox_db.dart';
 import 'outbox/outbox_uploader.dart';
 import 'outbox/sync_controller.dart';
 import 'pointage/punch_repository.dart';
+import 'tasks/task_repository.dart';
+import 'notifications/fcm_service.dart';
 
 /// Clé publiable Clerk, fournie au lancement :
 /// `flutter run --dart-define=CLERK_PUBLISHABLE_KEY=pk_...`
@@ -27,16 +29,29 @@ Future<void> main() async {
     drain: uploader.drainOnce,
   ).start();
 
+  final taskRepo = TaskRepository(fs, outbox);
+  final fcm = FcmService(fs);
+
   runApp(ProviderScope(child: PointageApp(
     outbox: outbox, repo: PunchRepository(fs, outbox), onSyncNow: uploader.drainOnce,
+    taskRepo: taskRepo, fcm: fcm,
   )));
 }
 
 class PointageApp extends StatelessWidget {
-  const PointageApp({super.key, required this.outbox, required this.repo, required this.onSyncNow});
+  const PointageApp({
+    super.key,
+    required this.outbox,
+    required this.repo,
+    required this.onSyncNow,
+    required this.taskRepo,
+    required this.fcm,
+  });
   final OutboxDb outbox;
   final PunchRepository repo;
   final Future<void> Function() onSyncNow;
+  final TaskRepository taskRepo;
+  final FcmService fcm;
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +77,8 @@ class PointageApp extends StatelessWidget {
             repo: repo,
             pendingCountStream: outbox.pendingCountStream(),
             onSyncNow: onSyncNow,
+            taskRepo: taskRepo,
+            fcm: fcm,
           ),
           signedOutBuilder: (context, authState) => const Scaffold(
             body: SafeArea(child: ClerkAuthentication()),
