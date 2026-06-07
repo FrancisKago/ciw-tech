@@ -65,6 +65,17 @@ Plan exécuté : `docs/superpowers/plans/2026-06-07-phase-2-taches-rapports-push
   canonique est possible (devrait être un no-op).
 - App Check (Phase 4) toujours non configuré.
 - Chemins Storage par user pour les pointages (`punches/{userId}/...`) : Phase 4.
+- **Correctif post-déploiement** : l'écran « Tâches » (manager) n'avait pas de bouton de
+  déconnexion → manager bloqué sans sortie. Ajout d'une action déconnexion (icône logout
+  dans l'AppBar) sur `TasksListScreen`, câblée pour les deux rôles (commit `017cb48`).
+- **Dette produit (Phase 3) — managers = aussi des techniciens** : aujourd'hui la
+  navigation est cloisonnée par rôle (`HomeShell` : manager → uniquement « Tâches créées » ;
+  technicien → Pointage + Mes tâches). Or un manager est aussi un technicien de terrain.
+  À faire plus tard : permettre au manager de **pointer** (accès à l'onglet Pointage) et de
+  **s'auto-assigner des tâches** (s'inclure dans la liste des assignés à la création, et voir
+  ses propres tâches assignées). Implique de revoir `HomeShell` (onglets cumulés pour un
+  manager : Pointage + Mes tâches + Tâches créées) et l'écran de création (autoriser
+  `assigneeId == self`).
 - **Optimisation (Phase 3)** : `firebase_auth_gate` ouvre deux listeners Firestore sur
   `tasksForAssignee(uid)` (onglet pointage + onglet « Mes tâches »). Coût négligeable à
   cette échelle ; à mutualiser (un seul stream broadcast) lors du refactor board Phase 3.
