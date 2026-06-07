@@ -47,7 +47,7 @@ void main() {
     await outbox.enqueuePunch('p1', '/tmp/p1.jpg');
 
     final uploader = OutboxUploader(fs, outbox,
-        uploadFn: (_, __, ___) async => throw Exception('réseau'));
+        uploadFn: (_, _, _) async => throw Exception('réseau'));
     await uploader.drainOnce();
 
     expect(await outbox.count(), 1);
