@@ -26,7 +26,7 @@ class PunchRepository {
     );
     // set() ne bloque pas hors ligne : Firestore met en cache et synchronise plus tard.
     ref.set(punch.toFirestore());
-    await _outbox.enqueue(ref.id, photoPath);
+    await _outbox.enqueuePunch(ref.id, photoPath);
     return ref.id;
   }
 }

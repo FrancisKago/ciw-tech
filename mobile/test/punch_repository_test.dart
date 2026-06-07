@@ -22,7 +22,8 @@ void main() {
     expect(doc.data()!['photoStatus'], 'pending');
 
     final pending = await outbox.pending();
-    expect(pending.single.punchId, id);
+    expect(pending.single.ownerId, id);
+    expect(pending.single.kind, 'punch');
     expect(pending.single.localPath, '/tmp/a.jpg');
     await outbox.close();
   });
