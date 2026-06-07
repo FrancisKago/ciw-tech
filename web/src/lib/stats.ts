@@ -73,3 +73,26 @@ export function lateCountByKey(
   }
   return out;
 }
+
+/** Minutes pointées par site (pairage in/out par technicien à l'intérieur de chaque site). */
+export function hoursPerSite(punches: StatsPunch[]): Map<string, number> {
+  const bySite = new Map<string, StatsPunch[]>();
+  for (const p of punches) {
+    const list = bySite.get(p.siteId) ?? [];
+    list.push(p);
+    bySite.set(p.siteId, list);
+  }
+  const out = new Map<string, number>();
+  for (const [siteId, list] of bySite) {
+    let minutes = 0;
+    const byUser = new Map<string, PunchLite[]>();
+    for (const p of list) {
+      const u = byUser.get(p.userId) ?? [];
+      u.push({ kind: p.kind, at: p.at });
+      byUser.set(p.userId, u);
+    }
+    for (const u of byUser.values()) minutes += computeWorkedMinutes(u).minutes;
+    out.set(siteId, minutes);
+  }
+  return out;
+}

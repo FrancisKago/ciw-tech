@@ -1,4 +1,4 @@
-import { parsePeriod, hoursPerTechnician, completionByKey, lateCountByKey, StatsPunch, StatsTask } from "@/lib/stats";
+import { parsePeriod, hoursPerTechnician, completionByKey, lateCountByKey, hoursPerSite, StatsPunch, StatsTask } from "@/lib/stats";
 
 const now = new Date(Date.UTC(2026, 5, 7, 15, 30)); // 7 juin 2026 15:30 UTC
 
@@ -82,5 +82,18 @@ describe("lateCountByKey", () => {
   it("n'ajoute pas de clé sans retard", () => {
     const map = lateCountByKey([sTask({ dueAt: new Date(Date.UTC(2026, 5, 9)) })], now, "assigneeId");
     expect(map.size).toBe(0);
+  });
+});
+
+describe("hoursPerSite", () => {
+  it("somme les minutes par site (apparie in/out par technicien dans chaque site)", () => {
+    const map = hoursPerSite([
+      { userId: "u1", kind: "in", at: at(8), siteId: "sA" },
+      { userId: "u1", kind: "out", at: at(12), siteId: "sA" },
+      { userId: "u2", kind: "in", at: at(9), siteId: "sB" },
+      { userId: "u2", kind: "out", at: at(10), siteId: "sB" },
+    ]);
+    expect(map.get("sA")).toBe(4 * 60);
+    expect(map.get("sB")).toBe(60);
   });
 });
