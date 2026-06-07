@@ -66,7 +66,13 @@ périodiquement (20 s) + après chaque pointage. Vidanges fusionnées (verrou an
   site au backoffice (`/sites`), `mintFirebaseToken` enregistre name+phone, sélecteur de tâche au
   pointage (siteId hérité). Règles testées via émulateur (11/11). Backoffice web mergé sur `main`
   (déployer sur Vercel si pas déjà fait).
-- **Phase 3 (suivi backoffice : board, alertes retard, stats)** : à faire.
+- **Phase 3 (suivi backoffice : board, alertes retard, stats)** : ✅ livré (code) + mergé sur `main`.
+  Navigation sidebar, résolution des noms (uid/siteId → noms), board lecture seule (3 colonnes par
+  statut + retards + filtres site/technicien), stats période glissante (today/7d/30d ; heures +
+  complétion + retards par technicien et par site). **Lecture seule, aucun changement de règles.**
+  Tests 39/39, `tsc`/`eslint`/`next build` OK. **Reste côté user : déployer sur Vercel.** Reporté :
+  cycle #4 (boucle manager : écriture statut, `done → approved`, push retour → ouvre l'écriture
+  backoffice + revue des règles) et cycle #5 (dette mobile « managers = aussi techniciens »).
 - **Phase 4 (durcissement : App Check, anomalies, chemins Storage par user, publication Play Store)** : à faire.
 
 Voir **docs/HANDOFF.md** pour reprendre exactement où on en est.
