@@ -9,12 +9,19 @@ class PointageScreen extends StatefulWidget {
   const PointageScreen({
     super.key, required this.userId, required this.geo, required this.photo,
     required this.repo, required this.pendingCount,
+    this.onPunchCreated, this.onSignOut,
   });
   final String userId;
   final GeoService geo;
   final PhotoService photo;
   final PunchRepository repo;
   final int pendingCount;
+
+  /// Appelé après un pointage réussi pour déclencher la synchro immédiate.
+  final Future<void> Function()? onPunchCreated;
+
+  /// Déconnexion (Firebase + Clerk).
+  final Future<void> Function()? onSignOut;
 
   @override
   State<PointageScreen> createState() => _PointageScreenState();
@@ -34,14 +41,30 @@ class _PointageScreenState extends State<PointageScreen> {
         lat: fix.lat, lng: fix.lng, accuracy: fix.accuracy,
         siteId: null, photoPath: photoPath,
       );
-      setState(() => _message = 'Pointage enregistré ✓');
+      await widget.onPunchCreated?.call(); // synchro immédiate de la photo
+      if (mounted) setState(() => _message = 'Pointage enregistré ✓');
     } on GeoDenied {
       setState(() => _message = 'Activez la localisation pour pointer.');
     } on PhotoCancelled {
       setState(() => _message = 'Une photo est obligatoire pour pointer.');
     } finally {
-      setState(() => _busy = false);
+      if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _confirmSignOut() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Se déconnecter ?'),
+        content: const Text('Vous devrez vous reconnecter pour pointer.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Se déconnecter')),
+        ],
+      ),
+    );
+    if (ok == true) await widget.onSignOut?.call();
   }
 
   @override
@@ -49,7 +72,18 @@ class _PointageScreenState extends State<PointageScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pointage'),
-        actions: [Padding(padding: const EdgeInsets.all(8), child: SyncBadge(pendingCount: widget.pendingCount))],
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Center(child: SyncBadge(pendingCount: widget.pendingCount)),
+          ),
+          if (widget.onSignOut != null)
+            IconButton(
+              tooltip: 'Se déconnecter',
+              icon: const Icon(Icons.logout),
+              onPressed: _busy ? null : _confirmSignOut,
+            ),
+        ],
       ),
       body: Center(
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [

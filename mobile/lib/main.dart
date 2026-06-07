@@ -28,14 +28,15 @@ Future<void> main() async {
   ).start();
 
   runApp(ProviderScope(child: PointageApp(
-    outbox: outbox, repo: PunchRepository(fs, outbox),
+    outbox: outbox, repo: PunchRepository(fs, outbox), onSyncNow: uploader.drainOnce,
   )));
 }
 
 class PointageApp extends StatelessWidget {
-  const PointageApp({super.key, required this.outbox, required this.repo});
+  const PointageApp({super.key, required this.outbox, required this.repo, required this.onSyncNow});
   final OutboxDb outbox;
   final PunchRepository repo;
+  final Future<void> Function() onSyncNow;
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +61,7 @@ class PointageApp extends StatelessWidget {
             clerkAuthState: authState,
             repo: repo,
             pendingCountStream: outbox.pendingCountStream(),
+            onSyncNow: onSyncNow,
           ),
           signedOutBuilder: (context, authState) => const Scaffold(
             body: SafeArea(child: ClerkAuthentication()),

@@ -18,11 +18,15 @@ class FirebaseAuthGate extends StatefulWidget {
     required this.clerkAuthState,
     required this.repo,
     required this.pendingCountStream,
+    required this.onSyncNow,
   });
 
   final ClerkAuthState clerkAuthState;
   final PunchRepository repo;
   final Stream<int> pendingCountStream;
+
+  /// Déclenche une vidange immédiate de l'outbox (upload des photos).
+  final Future<void> Function() onSyncNow;
 
   @override
   State<FirebaseAuthGate> createState() => _FirebaseAuthGateState();
@@ -60,6 +64,13 @@ class _FirebaseAuthGateState extends State<FirebaseAuthGate> {
       _started = false;
     });
     _ensureFirebaseSignIn();
+  }
+
+  /// Déconnexion complète : Firebase d'abord (pour forcer un nouveau pont au
+  /// prochain login), puis Clerk (ce qui ramène à l'écran de connexion).
+  Future<void> _signOut() async {
+    await FirebaseAuth.instance.signOut();
+    await widget.clerkAuthState.signOut();
   }
 
   @override
@@ -118,6 +129,8 @@ class _FirebaseAuthGateState extends State<FirebaseAuthGate> {
             photo: PhotoService(),
             repo: widget.repo,
             pendingCount: pendingSnap.data ?? 0,
+            onPunchCreated: widget.onSyncNow,
+            onSignOut: _signOut,
           ),
         );
       },
