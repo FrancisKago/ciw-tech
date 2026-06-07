@@ -34,3 +34,28 @@ export function hoursPerTechnician(
   for (const [uid, list] of byUser) out.set(uid, computeWorkedMinutes(list));
   return out;
 }
+
+function inRange(d: Date | null, start: Date, end: Date): boolean {
+  return d != null && d.getTime() >= start.getTime() && d.getTime() <= end.getTime();
+}
+
+/**
+ * Taux de complétion par clé ('assigneeId' ou 'siteId').
+ * Périmètre = tâches dont l'échéance tombe dans la période. done/approved comptent comme terminées.
+ */
+export function completionByKey(
+  tasks: StatsTask[],
+  range: { start: Date; end: Date },
+  key: "assigneeId" | "siteId",
+): Map<string, { done: number; total: number }> {
+  const out = new Map<string, { done: number; total: number }>();
+  for (const t of tasks) {
+    if (!inRange(t.dueAt, range.start, range.end)) continue;
+    const k = t[key];
+    const cur = out.get(k) ?? { done: 0, total: 0 };
+    cur.total += 1;
+    if (t.status === "done" || t.status === "approved") cur.done += 1;
+    out.set(k, cur);
+  }
+  return out;
+}
