@@ -261,12 +261,14 @@ class _FirebaseAuthGateState extends State<FirebaseAuthGate> {
                 title: 'Mes tâches',
                 tasks: widget.taskRepo.tasksForAssignee(user.uid),
                 onTapTask: (t) => _openTask(context, t),
+                onSignOut: _signOut,
               ),
               managerTasksTab: TasksListScreen(
                 title: 'Tâches créées',
                 tasks: widget.taskRepo.tasksCreatedBy(user.uid),
                 onTapTask: (t) => _openTask(context, t),
                 onCreate: () => _openCreate(context, user.uid, fs),
+                onSignOut: _signOut,
               ),
             );
           },
