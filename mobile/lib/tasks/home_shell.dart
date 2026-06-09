@@ -23,10 +23,14 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     final tabs = widget.isManager
-        ? [widget.managerTasksTab]
+        ? [widget.pointageTab, widget.myTasksTab, widget.managerTasksTab]
         : [widget.pointageTab, widget.myTasksTab];
     final dests = widget.isManager
-        ? const [NavigationDestination(icon: Icon(Icons.assignment), label: 'Tâches')]
+        ? const [
+            NavigationDestination(icon: Icon(Icons.access_time), label: 'Pointage'),
+            NavigationDestination(icon: Icon(Icons.checklist), label: 'Mes tâches'),
+            NavigationDestination(icon: Icon(Icons.assignment), label: 'Tâches créées'),
+          ]
         : const [
             NavigationDestination(icon: Icon(Icons.access_time), label: 'Pointage'),
             NavigationDestination(icon: Icon(Icons.checklist), label: 'Mes tâches'),
