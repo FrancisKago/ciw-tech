@@ -120,4 +120,19 @@ describe("règles tasks", () => {
     await assertSucceeds(
       setDoc(doc(db, "tasks/t11"), { report: { photoUrls: ["u"] } }, { merge: true }));
   });
+
+  it("un manager peut s'auto-assigner une tâche (assigneeId == createdBy)", async () => {
+    const db = ctx("mgr", "manager");
+    await assertSucceeds(setDoc(doc(db, "tasks/t12"),
+      { ...baseTask, assigneeId: "mgr", createdBy: "mgr" }));
+  });
+
+  it("un manager-assigné peut démarrer sa propre tâche (in_progress)", async () => {
+    await env.withSecurityRulesDisabled((c) =>
+      setDoc(doc(c.firestore(), "tasks/t13"),
+        { ...baseTask, assigneeId: "mgr", createdBy: "mgr" }));
+    const db = ctx("mgr", "manager");
+    await assertSucceeds(setDoc(doc(db, "tasks/t13"),
+      { ...baseTask, assigneeId: "mgr", createdBy: "mgr", status: "in_progress" }));
+  });
 });
