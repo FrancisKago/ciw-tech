@@ -58,4 +58,48 @@ void main() {
     final btn = tester.widget<ElevatedButton>(find.byKey(const Key('create_submit')));
     expect(btn.onPressed, isNull); // bouton désactivé tant que les listes sont vides
   });
+
+  testWidgets('avec self : l\'option "Moi (vous)" apparaît et produit assigneeId==self',
+      (tester) async {
+    String? assignee;
+    await tester.pumpWidget(MaterialApp(
+      home: TaskCreateScreen(
+        sites: sites, technicians: techs, isOnline: true,
+        self: const (id: 'mgr', name: 'Moi (vous)'),
+        onCreate: (title, desc, siteId, assigneeId, priority, dueAt) async {
+          assignee = assigneeId;
+        },
+      ),
+    ));
+
+    await tester.enterText(find.byKey(const Key('task_title')), 'Tâche perso');
+    // Ouvrir le sélecteur d'assigné et choisir "Moi (vous)"
+    await tester.tap(find.text('Awono')); // valeur par défaut (1er technicien) affichée
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Moi (vous)').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('create_submit')));
+    await tester.pump();
+
+    expect(assignee, 'mgr');
+  });
+
+  testWidgets('self seul (aucun technicien) : soumission possible', (tester) async {
+    String? assignee;
+    await tester.pumpWidget(MaterialApp(
+      home: TaskCreateScreen(
+        sites: sites, technicians: const [], isOnline: true,
+        self: const (id: 'mgr', name: 'Moi (vous)'),
+        onCreate: (title, desc, siteId, assigneeId, priority, dueAt) async {
+          assignee = assigneeId;
+        },
+      ),
+    ));
+    await tester.enterText(find.byKey(const Key('task_title')), 'Solo');
+    final btn = tester.widget<ElevatedButton>(find.byKey(const Key('create_submit')));
+    expect(btn.onPressed, isNotNull); // bouton actif : self suffit
+    await tester.tap(find.byKey(const Key('create_submit')));
+    await tester.pump();
+    expect(assignee, 'mgr'); // self pré-sélectionné faute de technicien
+  });
 }
