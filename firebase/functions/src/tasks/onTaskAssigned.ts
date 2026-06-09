@@ -29,12 +29,20 @@ export function splitInvalidTokens(tokens: string[], responses: SendResponse[]) 
   return { invalid };
 }
 
+/** Vrai si l'assignation mérite un push : assigné présent ET différent du créateur
+ *  (une auto-assignation ne se notifie pas elle-même). */
+export function shouldNotifyAssignment(
+  task: { assigneeId?: string; createdBy?: string },
+): boolean {
+  return !!task.assigneeId && task.assigneeId !== task.createdBy;
+}
+
 export const onTaskAssigned = onDocumentCreated("tasks/{taskId}", async (event) => {
   const snap = event.data;
   if (!snap) return;
-  const task = snap.data() as TaskLite & { assigneeId?: string };
+  const task = snap.data() as TaskLite & { assigneeId?: string; createdBy?: string };
   const taskId = event.params.taskId;
-  if (!task.assigneeId) return; // tâche sans assigné : rien à notifier
+  if (!shouldNotifyAssignment(task)) return; // pas d'assigné, ou auto-assignation
 
   const userSnap = await admin.firestore().doc(`users/${task.assigneeId}`).get();
   const tokens: string[] = userSnap.get("fcmTokens") ?? [];

@@ -1,4 +1,8 @@
-import { buildAssignmentMessage, splitInvalidTokens } from "../src/tasks/onTaskAssigned";
+import {
+  buildAssignmentMessage,
+  splitInvalidTokens,
+  shouldNotifyAssignment,
+} from "../src/tasks/onTaskAssigned";
 
 describe("buildAssignmentMessage", () => {
   it("construit titre, corps et data avec le taskId", () => {
@@ -22,5 +26,17 @@ describe("splitInvalidTokens", () => {
     ];
     const { invalid } = splitInvalidTokens(tokens, responses as never);
     expect(invalid).toEqual(["tB"]); // pas tC (erreur transitoire, on garde)
+  });
+});
+
+describe("shouldNotifyAssignment", () => {
+  it("notifie quand l'assigné diffère du créateur", () => {
+    expect(shouldNotifyAssignment({ assigneeId: "tech_1", createdBy: "mgr" })).toBe(true);
+  });
+  it("ne notifie PAS une auto-assignation (assigneeId == createdBy)", () => {
+    expect(shouldNotifyAssignment({ assigneeId: "mgr", createdBy: "mgr" })).toBe(false);
+  });
+  it("ne notifie PAS sans assigné", () => {
+    expect(shouldNotifyAssignment({ createdBy: "mgr" })).toBe(false);
   });
 });
