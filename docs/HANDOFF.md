@@ -157,8 +157,47 @@ Mergé sur `main` (merge `--no-ff` `ea7f3db`), poussé sur `origin/main`.
 4. ✅ **Boucle complète validée de bout en bout sur appareil (tablette SM X115)** : technicien
    clôture → manager reçoit le push → détail backoffice → Valider → technicien reçoit le push.
 
+## Cycle #5 — managers = aussi techniciens : code livré sur branche, validation appareil en attente ⏳
+Spec : `docs/superpowers/specs/2026-06-09-cycle-5-managers-aussi-techniciens-design.md`.
+Plan : `docs/superpowers/plans/2026-06-09-cycle-5-managers-aussi-techniciens.md`.
+Branche : **`cycle-5-managers-techniciens`** (PAS encore mergée — voir « Pour reprendre »).
+Approche A (chirurgicale). **Aucun changement de règles ni de modèle de données.**
+
+- **Mobile** :
+  - `HomeShell` : un manager cumule désormais 3 onglets (Pointage + Mes tâches + Tâches créées) ;
+    technicien inchangé. (`088a39c`)
+  - `TaskCreateScreen` : paramètre optionnel `self` → entrée « Moi (vous) » en tête du sélecteur
+    d'assigné ; défaut = 1er technicien sinon soi ; soumission possible même sans technicien si
+    `self` fourni. (`d21dc9c`)
+  - Câblage `firebase_auth_gate` : `_openCreate` passe `self: (id: uid, name: 'Moi (vous)')`. (`8746bdf7`)
+- **Functions (garde-fou anti-push-perso, `assigneeId == createdBy`)** :
+  - `onTaskAssigned` : prédicat pur `shouldNotifyAssignment` → pas de push « Nouvelle tâche »
+    en auto-assignation. (`1cf306d`)
+  - `routeStatusChange` : pas de push « à valider » vers soi ; le push « validée » est **conservé**
+    (informe le manager-exécutant). (`2608b07`)
+- **Règles** : 2 tests documentaires d'auto-assignation ajoutés (création + démarrage par un
+  manager-assigné). `tsc` propre. (`40b5ca2`)
+
+### État des tests (Cycle #5)
+- **Mobile** : `flutter analyze` propre + **43/43** verts (dont 2 nouveaux d'auto-assignation).
+- **Functions (unitaires)** : **20/20** verts (`npx jest --testPathIgnorePatterns=rules`).
+- **Règles** : **non exécutées ici** (émulateur Firestore bloqué sur ce poste, dette socket
+  Java 17). À lancer dans ton terminal : `cd firebase && firebase emulators:exec --only
+  firestore "cd functions && npx jest rules"` → **attendu 17/17** (15 + 2 nouveaux).
+
 ## Pour reprendre
-1. Lire `CLAUDE.md` + ce fichier (tout est sur `main`, poussé).
-2. Prochain chantier : **cycle #5** (managers = aussi techniciens : laisser un manager pointer
-   et s'auto-assigner des tâches — revoir `HomeShell` + écran de création côté Flutter), ou la
-   **Phase 4** (durcissement : App Check, anomalies, chemins Storage par user, Play Store).
+1. Lire `CLAUDE.md` + ce fichier. **Le Cycle #5 est sur la branche `cycle-5-managers-techniciens`,
+   pas sur `main`** — il attend ta validation avant merge.
+2. **Reste à faire côté toi (gate de validation Cycle #5)** :
+   a. Tests de règles via l'émulateur (commande ci-dessus) → 17/17.
+   b. Build + validation sur tablette SM X115 :
+      `cd mobile && flutter run -d R83Y60PXH0P --dart-define=CLERK_PUBLISHABLE_KEY=pk_...`
+      Parcours : un compte **manager** voit 3 onglets ; pointe (onglet Pointage) ; crée une tâche
+      en se choisissant comme assigné (« Moi (vous) ») ; la retrouve dans « Mes tâches » ; la
+      démarre et la clôture avec rapport — **sans recevoir de push pour lui-même**.
+   c. Merge : `git checkout main && git merge --no-ff cycle-5-managers-techniciens` puis push.
+   d. **Déployer les Functions** (le garde-fou anti-push vit côté serveur) :
+      `cd firebase && firebase deploy --only functions`. Règles **inchangées** → pas de
+      `firestore:rules` à redéployer.
+3. Chantier suivant : **Phase 4** (durcissement : App Check, anomalies, chemins Storage par user,
+   Play Store), ou la dette « Sans site » des stats (rattacher tout pointage à un site/tâche).
