@@ -157,10 +157,11 @@ Mergé sur `main` (merge `--no-ff` `ea7f3db`), poussé sur `origin/main`.
 4. ✅ **Boucle complète validée de bout en bout sur appareil (tablette SM X115)** : technicien
    clôture → manager reçoit le push → détail backoffice → Valider → technicien reçoit le push.
 
-## Cycle #5 — managers = aussi techniciens : code livré sur branche, validation appareil en attente ⏳
+## Cycle #5 — managers = aussi techniciens : livré + mergé + déployé ✅
 Spec : `docs/superpowers/specs/2026-06-09-cycle-5-managers-aussi-techniciens-design.md`.
 Plan : `docs/superpowers/plans/2026-06-09-cycle-5-managers-aussi-techniciens.md`.
-Branche : **`cycle-5-managers-techniciens`** (PAS encore mergée — voir « Pour reprendre »).
+**Mergé sur `main`** (merge `--no-ff` `b338f01`, poussé sur `origin/main`) ; **Functions déployées
+en prod** ; manager 3 onglets **validé sur tablette** (technicien 2 onglets confirmé).
 Approche A (chirurgicale). **Aucun changement de règles ni de modèle de données.**
 
 - **Mobile** :
@@ -185,19 +186,26 @@ Approche A (chirurgicale). **Aucun changement de règles ni de modèle de donné
   Java 17). À lancer dans ton terminal : `cd firebase && firebase emulators:exec --only
   firestore "cd functions && npx jest rules"` → **attendu 17/17** (15 + 2 nouveaux).
 
+## Backoffice déployé sur Vercel ✅
+Projet Vercel `ciw-tech`, **intégration Git** : push sur `main` → déploiement **production** auto ;
+autres branches/PR → **preview**. Pièges réglés à la mise en place : Root Directory = **`web`**
+(monorepo), framework = **Next.js** (créé en « Other » au départ), **5 variables d'env**
+(Clerk + Firebase) en Production+Preview. ⚠ `FIREBASE_PRIVATE_KEY` : coller **sans guillemets**,
+garder les `\n` littéraux (sinon `cert()` échoue → erreur Server Component après login). ⚠ Variables
+manquantes → middleware Clerk jette → `MIDDLEWARE_INVOCATION_FAILED`. Détails : mémoire
+`web-vercel-deploiement`. Note : `next dev` (Turbopack, Next 16) **crashe** sur `board/[taskId]` en
+**local** ; `next build` + prod Vercel OK → valider la page détail sur Vercel, pas en dev local.
+
 ## Pour reprendre
-1. Lire `CLAUDE.md` + ce fichier. **Le Cycle #5 est sur la branche `cycle-5-managers-techniciens`,
-   pas sur `main`** — il attend ta validation avant merge.
-2. **Reste à faire côté toi (gate de validation Cycle #5)** :
-   a. Tests de règles via l'émulateur (commande ci-dessus) → 17/17.
-   b. Build + validation sur tablette SM X115 :
-      `cd mobile && flutter run -d R83Y60PXH0P --dart-define=CLERK_PUBLISHABLE_KEY=pk_...`
-      Parcours : un compte **manager** voit 3 onglets ; pointe (onglet Pointage) ; crée une tâche
-      en se choisissant comme assigné (« Moi (vous) ») ; la retrouve dans « Mes tâches » ; la
-      démarre et la clôture avec rapport — **sans recevoir de push pour lui-même**.
-   c. Merge : `git checkout main && git merge --no-ff cycle-5-managers-techniciens` puis push.
-   d. **Déployer les Functions** (le garde-fou anti-push vit côté serveur) :
-      `cd firebase && firebase deploy --only functions`. Règles **inchangées** → pas de
-      `firestore:rules` à redéployer.
-3. Chantier suivant : **Phase 4** (durcissement : App Check, anomalies, chemins Storage par user,
+1. Lire `CLAUDE.md` + ce fichier. **Cycle #5 est mergé sur `main` et déployé** ; backoffice en ligne
+   sur Vercel (auto-deploy sur push `main`).
+2. **Reste optionnel côté toi** :
+   - Confirmation Partie B sur tablette SM X115 : un manager qui s'auto-assigne une tâche ne reçoit
+     **aucun push perso** (« Nouvelle tâche » / « à valider ») ; le push « validée » arrive bien.
+   - Tests de règles émulateur si tu veux les cocher : `cd firebase && firebase emulators:exec
+     --only firestore "cd functions && npx jest rules"` → 17/17 attendu.
+3. **Clerk** : instance **développement** (`pk_test_…`). Passage en prod = créer l'instance Clerk
+   production + **réappliquer** la personnalisation du token de session
+   (`{ "public_metadata": "{{user.public_metadata}}" }`), sinon le rôle mobile retombe sur technicien.
+4. Chantier suivant : **Phase 4** (durcissement : App Check, anomalies, chemins Storage par user,
    Play Store), ou la dette « Sans site » des stats (rattacher tout pointage à un site/tâche).
