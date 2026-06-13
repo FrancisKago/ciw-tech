@@ -1,13 +1,44 @@
 # Session Handoff — Cameroon Innovation
 
 **Date :** 2026-06-13 (dernière session)
-**Frontière actuelle :** **Phase 4 — chantier « détection d'anomalies de pointage » livré + mergé
-sur `main` (merge `--no-ff`)**. Page backoffice `/alertes` (lecture seule) + librairie pure
-`web/src/lib/anomalies.ts`. **Aucun changement de règles/Function/mobile** → pas de `firebase
-deploy` ; le push sur `main` auto-déploie le backoffice sur Vercel. Détails : section « Phase 4 —
-détection d'anomalies » plus bas. **Reste côté user :** valider la page `/alertes` sur Vercel.
-Chantiers Phase 4 restants (indépendants) : App Check, chemins Storage par user, Play Store.
-Autre dette possible : « Sans site » des stats. — Historique des phases précédentes ci-dessous.
+**Frontière actuelle :** **Phase 4 — chantier « chemins Storage par utilisateur » livré + mergé
+sur `main` (merge `--no-ff`)**. Photos de pointage sous `punches/{userId}/{punchId}.jpg`, écriture
+réservée au propriétaire. **⚠ Reste côté user (ORDRE IMPORTANT) : 1) déployer la nouvelle app sur
+TOUS les appareils, PUIS 2) `cd firebase && firebase deploy --only storage`** — sinon une vieille
+app écrivant l'ancien chemin plat sera refusée par la nouvelle règle. Pousser `main` n'active PAS
+la règle (seul le backoffice web s'auto-déploie). Détails : section « Phase 4 — chemins Storage par
+utilisateur » plus bas. Chantier précédent (détection d'anomalies) également livré + mergé (section
+dédiée). Chantiers Phase 4 restants : App Check, Play Store. — Historique ci-dessous.
+
+## Phase 4 — chemins Storage par utilisateur : livré + mergé sur `main` ✅
+Spec : `docs/superpowers/specs/2026-06-13-phase-4-chemins-storage-par-user-design.md`.
+Plan : `docs/superpowers/plans/2026-06-13-phase-4-chemins-storage-par-user.md`.
+Exécution subagent-driven (3 tâches, TDD, revue spec + qualité + revue finale).
+
+- **But** : fermer la faille où n'importe quel utilisateur connecté pouvait écrire
+  `punches/{punchId}.jpg`. Nouveau chemin **`punches/{userId}/{punchId}.jpg`**, write réservé à
+  `request.auth.uid == userId`.
+- **`mobile/lib/outbox/outbox_uploader.dart`** : `UploadFn` gagne un param `userId` ; pour un punch,
+  l'uploader **relit `userId` depuis le doc `punches/{punchId}`** (`Source.cache`, repli serveur,
+  `on FirebaseException`) avant l'upload, puis écrit `punches/{userId}/{punchId}.jpg`. `userId`
+  introuvable → échec contrôlé (`bumpAttempts`, jamais d'upload sur `punches/null/...`). **Aucune
+  migration Drift, aucun changement de modèle.** Reports inchangés.
+- **`firebase/storage.rules`** : `match /punches/{userId}/{fileName}` (write si signed-in +
+  `auth.uid == userId` + ≤10 Mo ; read manager). Bloc report et catch-all inchangés.
+- **Chaîne d'uid vérifiée** : `mintFirebaseToken` → `createCustomToken(userId)` (donc
+  `auth.uid == userId`) ; `createPunch` écrit `userId = user.uid`. Le segment client et le segment
+  de la règle sont le même uid.
+- **Photos existantes** : intactes et toujours visibles (URLs `getDownloadURL` tokenisées,
+  indépendantes des règles).
+- **Tests** : `flutter test` **44/44**, `flutter analyze` propre. (Pas de test d'émulateur Storage
+  ici — validé côté user.)
+- **Reste côté user (⚠ ORDRE)** :
+  1. **Mettre à jour l'app sur tous les appareils** (build APK depuis ton terminal).
+  2. **`cd firebase && firebase deploy --only storage`** (dry-run possible : `--only storage --dry-run`).
+  3. Valider sur appareil : pointer dans le rayon avec photo → vérifier le fichier sous
+     `punches/{userId}/{punchId}.jpg` (console Storage) + affichage backoffice.
+  - Optionnel : tests de règles Storage via émulateur (écrire `punches/{sonUid}/x` autorisé,
+    `punches/{autreUid}/x` refusé, lecture non-manager refusée).
 
 ## Phase 4 — détection d'anomalies de pointage : livré + mergé sur `main` ✅
 Spec : `docs/superpowers/specs/2026-06-13-phase-4-detection-anomalies-design.md`.

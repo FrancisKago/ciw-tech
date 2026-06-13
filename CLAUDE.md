@@ -105,8 +105,17 @@ périodiquement (20 s) + après chaque pointage. Vidanges fusionnées (verrou an
     `next build` OK. Spec : `docs/superpowers/specs/2026-06-13-phase-4-detection-anomalies-design.md`,
     plan : `docs/superpowers/plans/2026-06-13-phase-4-detection-anomalies.md`. **Reste côté user :
     rien (auto-deploy Vercel sur push `main`) ; valider la page `/alertes` sur Vercel.**
+  - **Chemins Storage par utilisateur** : ✅ livré (code) + mergé sur `main` (merge `--no-ff`).
+    Photos de pointage : `punches/{punchId}.jpg` → `punches/{userId}/{punchId}.jpg` ; règle Storage
+    durcie (write si `request.auth.uid == userId`). `OutboxUploader` relit `userId` du doc punch
+    (cache, repli serveur ; `FirebaseException` ciblée) — **aucune migration Drift, aucun changement
+    de modèle**. Reports inchangés. Tests `flutter test` **44/44**, `flutter analyze` propre. Spec/plan :
+    `docs/superpowers/{specs,plans}/2026-06-13-phase-4-chemins-storage-par-user*`. **Reste côté user
+    (⚠ ORDRE) : 1) mettre à jour l'app sur tous les appareils, PUIS 2) `cd firebase && firebase
+    deploy --only storage`** (sinon une vieille app écrivant l'ancien chemin plat est refusée) ;
+    valider sur appareil (photo sous `punches/{userId}/{punchId}.jpg` en console Storage). Pousser
+    `main` n'active PAS cette règle (seul le backoffice web s'auto-déploie sur Vercel).
   - **App Check** (attestation Play Integrity, enforcement progressif) : à faire.
-  - **Chemins Storage par utilisateur** (`punches/{userId}/{punchId}.jpg`) : à faire.
   - **Publication Play Store** (signing, fiche, confidentialité, rollout) : à faire.
 
 Voir **docs/HANDOFF.md** pour reprendre exactement où on en est.
