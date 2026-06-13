@@ -1,14 +1,47 @@
 # Session Handoff — Cameroon Innovation
 
 **Date :** 2026-06-13 (dernière session)
-**Frontière actuelle :** **Phase 4 — chantier « chemins Storage par utilisateur » livré + mergé
-sur `main` (merge `--no-ff`)**. Photos de pointage sous `punches/{userId}/{punchId}.jpg`, écriture
-réservée au propriétaire. **⚠ Reste côté user (ORDRE IMPORTANT) : 1) déployer la nouvelle app sur
-TOUS les appareils, PUIS 2) `cd firebase && firebase deploy --only storage`** — sinon une vieille
-app écrivant l'ancien chemin plat sera refusée par la nouvelle règle. Pousser `main` n'active PAS
-la règle (seul le backoffice web s'auto-déploie). Détails : section « Phase 4 — chemins Storage par
-utilisateur » plus bas. Chantier précédent (détection d'anomalies) également livré + mergé (section
-dédiée). Chantiers Phase 4 restants : App Check, Play Store. — Historique ci-dessous.
+**Frontière actuelle :** **Refonte design — Cycle 1 « Identité visuelle » livré + mergé sur `main`
+(merge `--no-ff`)**. Logo Cameroon Innovation recréé (SVG + PNG 1024), thème clair bleu nuit/orange
+(mobile + web), système de 3 branches couleur+icône data-driven (`Task.domaine`) affiché partout
+(mobile + web + stats). **Aucun changement de règles Firestore.** Tests mobile 56/56 + analyze, web
+80/80 + tsc/eslint/build. **Reste côté user :** web s'auto-déploie sur Vercel (push `main`) → valider
+le rendu ; **mobile** = `cd mobile && dart run flutter_launcher_icons && dart run
+flutter_native_splash:create` puis build APK + validation appareil (icône, splash, thème, sélecteur
+de domaine, puces de branche). Détails : section « Refonte design — Cycle 1 » plus bas.
+**Prochain : Cycle 2 — refonte du formulaire de rapport CI-F-003** (réutilise `domaine`).
+
+⚠ **Rappels en attente (chantiers précédents, non bloqués par ce cycle)** :
+- **Chemins Storage par user** (déjà mergé) : pour activer la règle durcie, dans l'ORDRE — 1) app à
+  jour sur TOUS les appareils, PUIS 2) `cd firebase && firebase deploy --only storage`.
+- Chantiers Phase 4 restants : **App Check**, **Play Store**.
+
+## Refonte design — Cycle 1 : Identité visuelle (livré + mergé sur `main`) ✅
+Spec : `docs/superpowers/specs/2026-06-13-identite-visuelle-design.md`.
+Plan : `docs/superpowers/plans/2026-06-13-identite-visuelle.md`.
+Exécution subagent-driven (Partie A marque/thème + Partie B branches, ~13 tâches, TDD sur la logique
+pure, revue finale READY TO MERGE).
+
+- **Logo** recréé en SVG (`mobile/assets/brand/logo_mark.svg` + `logo_lockup.svg`, copiés dans
+  `web/public/brand/`) — écusson bleu nuit, monogramme `ci` blanc, accent orange. **PNG 1024**
+  (`logo_mark_1024.png`) rendu via PIL (pas de rasterizer SVG sur ce poste) pour le lanceur.
+- **Thème clair** : Flutter `mobile/lib/theme/app_colors.dart` + `app_theme.dart` (AppBar bleu nuit,
+  FAB/boutons orange ; câblé dans `main.dart`) ; web tokens `globals.css` + Sidebar bleu nuit + logo
+  (`web/src/components/Logo.tsx`, `<img>` pour le SVG).
+- **3 branches data-driven** : `DomaineTrade {electricite, informatique, plomberie, autre}` +
+  `Task.domaine` (nullable). Couleur+icône partagées : mobile `branch_meta.dart`/`BranchChip`,
+  web `branches.ts`/`BranchBadge`. Sélecteur de domaine à la création (mobile, threadé
+  create→`firebase_auth_gate`→`task_repository`→`Task`). Affichage : mobile liste+détail ; web
+  board + détail `[taskId]` + colonne « Domaine » de la table tâches + stats « complétion par
+  branche » (`completionByDomaine`).
+- **Aucun changement de règles** (le manager pose `domaine` à la création ; l'assigné ne le modifie
+  pas). Génération icône/splash + APK = côté user (le contexte Claude ne build pas l'APK).
+- Divergence mineure assumée : `domaine` *malformé* (jamais émis par l'app) → mobile `autre`, web
+  « Non précisé » ; *absent* → « Non précisé »/null des deux côtés.
+- Dette notée (pré-existante, hors périmètre) : `web/src/app/globals.css` garde un
+  `@media (prefers-color-scheme: dark)` du template Next qui assombrit le fond de page ; le chrome
+  de marque (vars fixes) n'est pas affecté. À nettoyer un jour si on veut un clair strict.
+
 
 ## Phase 4 — chemins Storage par utilisateur : livré + mergé sur `main` ✅
 Spec : `docs/superpowers/specs/2026-06-13-phase-4-chemins-storage-par-user-design.md`.
