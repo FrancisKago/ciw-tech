@@ -1,4 +1,4 @@
-import { parsePeriod, hoursPerTechnician, completionByKey, lateCountByKey, hoursPerSite, StatsPunch, StatsTask } from "@/lib/stats";
+import { parsePeriod, hoursPerTechnician, completionByKey, lateCountByKey, hoursPerSite, completionByDomaine, StatsPunch, StatsTask } from "@/lib/stats";
 
 const now = new Date(Date.UTC(2026, 5, 7, 15, 30)); // 7 juin 2026 15:30 UTC
 
@@ -100,5 +100,19 @@ describe("hoursPerSite", () => {
     ]);
     expect(map.get("sA")).toBe(4 * 60);
     expect(map.get("sB")).toBe(60);
+  });
+});
+
+describe("completionByDomaine", () => {
+  const range = { start: new Date(Date.UTC(2026, 5, 1)), end: new Date(Date.UTC(2026, 5, 30)) };
+  const mk = (domaine: string | undefined, status: string) =>
+    ({ assigneeId: "u1", siteId: "s1", status, dueAt: new Date(Date.UTC(2026, 5, 10)), createdAt: null, domaine } as any);
+  it("regroupe complétion par branche, fallback 'non-precise'", () => {
+    const m = completionByDomaine(
+      [mk("electricite", "done"), mk("electricite", "assigned"), mk(undefined, "approved")],
+      range,
+    );
+    expect(m.get("electricite")).toEqual({ done: 1, total: 2 });
+    expect(m.get("non-precise")).toEqual({ done: 1, total: 1 });
   });
 });

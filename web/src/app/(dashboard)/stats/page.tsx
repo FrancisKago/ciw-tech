@@ -1,9 +1,10 @@
 import { db } from "@/lib/firebaseAdmin";
 import { loadDirectory, displayUser, displaySite } from "@/lib/directory";
 import {
-  parsePeriod, hoursPerTechnician, completionByKey, lateCountByKey, hoursPerSite,
+  parsePeriod, hoursPerTechnician, completionByKey, lateCountByKey, hoursPerSite, completionByDomaine,
   StatsPunch, StatsTask, PeriodKey,
 } from "@/lib/stats";
+import { branchMeta } from "@/lib/branches";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,7 @@ export default async function StatsPage({
       status: data.status ?? "assigned",
       dueAt: data.dueAt ? data.dueAt.toDate() : null,
       createdAt: data.createdAt ? data.createdAt.toDate() : null,
+      domaine: data.domaine ?? undefined,
     };
   });
 
@@ -54,6 +56,8 @@ export default async function StatsPage({
   const compS = completionByKey(tasks, range, "siteId");
   const lateS = lateCountByKey(tasks, now, "siteId");
   const siteKeys = new Set<string>([...hoursS.keys(), ...compS.keys(), ...lateS.keys()]);
+
+  const compD = completionByDomaine(tasks, range);
 
   return (
     <main className="p-6">
@@ -102,7 +106,7 @@ export default async function StatsPage({
       </table>
 
       <h2 className="mb-2 text-lg font-semibold">Par site</h2>
-      <table className="w-full max-w-3xl border-collapse text-sm">
+      <table className="mb-8 w-full max-w-3xl border-collapse text-sm">
         <thead>
           <tr className="border-b text-left text-gray-500">
             <th className="py-2">Site</th><th>Heures</th><th>Complétion</th><th>Retards</th>
@@ -121,6 +125,24 @@ export default async function StatsPage({
             );
           })}
           {siteKeys.size === 0 && <tr><td colSpan={4} className="py-2 text-gray-400">Aucune donnée sur la période.</td></tr>}
+        </tbody>
+      </table>
+
+      <h2 className="mb-2 text-lg font-semibold">Complétion par branche</h2>
+      <table className="w-full max-w-3xl border-collapse text-sm">
+        <thead>
+          <tr className="border-b text-left text-gray-500">
+            <th className="py-2">Branche</th><th>Complétion</th>
+          </tr>
+        </thead>
+        <tbody>
+          {[...compD.entries()].map(([key, c]) => (
+            <tr key={key} className="border-b">
+              <td className="py-2">{branchMeta(key).label}</td>
+              <td>{`${c.done}/${c.total}`}</td>
+            </tr>
+          ))}
+          {compD.size === 0 && <tr><td colSpan={2} className="py-2 text-gray-400">Aucune donnée sur la période.</td></tr>}
         </tbody>
       </table>
     </main>
