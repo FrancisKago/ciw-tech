@@ -1,7 +1,13 @@
 # Session Handoff — Cameroon Innovation
 
-**Date :** 2026-06-07
-**État global :** Phases 0 + 1 + 2 **terminées, déployées et validées de bout en bout
+**Date :** 2026-06-13 (dernière session)
+**Frontière actuelle :** **Cycle #5 (managers = aussi techniciens) livré + mergé sur `main`
+(`b338f01`) + Functions déployées**, et **backoffice déployé sur Vercel** (auto-deploy sur push
+`main`). Détails : section « Cycle #5 » et « Backoffice déployé sur Vercel » plus bas + « Pour
+reprendre ». Reste optionnel : confirmation Partie B sur appareil. Prochain : Phase 4 ou dette
+« Sans site ». — Historique des phases précédentes ci-dessous.
+
+**État global (historique) :** Phases 0 + 1 + 2 **terminées, déployées et validées de bout en bout
 sur appareil réel**. Phase 2 mergée sur `main` ; règles + Storage + Functions déployées
 (`onTaskAssigned` en prod) ; parcours manager→push→technicien→rapport→backoffice confirmé.
 **Phase 3 (backoffice de suivi) : livrée + mergée sur `main`** (navigation sidebar,
