@@ -2,7 +2,7 @@ import type { Firestore } from "firebase-admin/firestore";
 
 export interface Directory {
   users: Map<string, { name: string }>;
-  sites: Map<string, { name: string }>;
+  sites: Map<string, { name: string; geo: { lat: number; lng: number } | null; radiusMeters: number | null }>;
 }
 
 /** Forme minimale d'un utilisateur Clerk dont on dérive un nom d'affichage. */
@@ -59,9 +59,19 @@ export async function loadDirectory(db: Firestore): Promise<Directory> {
   for (const u of userList.data) {
     users.set(u.id, { name: clerkDisplayName(u) });
   }
-  const sites = new Map<string, { name: string }>();
+  const sites = new Map<
+    string,
+    { name: string; geo: { lat: number; lng: number } | null; radiusMeters: number | null }
+  >();
   for (const d of sitesSnap.docs) {
-    sites.set(d.id, { name: (d.data().name as string) ?? d.id });
+    const data = d.data();
+    const geo =
+      data.geo != null ? { lat: data.geo.lat as number, lng: data.geo.lng as number } : null;
+    sites.set(d.id, {
+      name: (data.name as string) ?? d.id,
+      geo,
+      radiusMeters: (data.radiusMeters as number) ?? null,
+    });
   }
   return { users, sites };
 }
