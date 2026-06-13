@@ -68,6 +68,8 @@ dev_dependencies:
   drift_dev: ">=2.28.0 <2.32.0" # matched to drift cap so codegen avoids sqlite3 3.x build hook (see drift note above)
   build_runner: ^2.15.0
   fake_cloud_firestore: ^4.1.1
+  flutter_launcher_icons: ^0.14.1 # génération icône lanceur (lancée par l'utilisateur)
+  flutter_native_splash: ^2.4.1 # génération splash (lancée par l'utilisateur)
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -79,6 +81,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/brand/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -110,3 +115,21 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Génération de l'icône de lanceur (lancée par l'utilisateur :
+# `cd mobile && dart run flutter_launcher_icons`).
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/brand/logo_mark_1024.png"
+  adaptive_icon_background: "#1A3C5E"
+  adaptive_icon_foreground: "assets/brand/logo_mark_1024.png"
+
+# Génération du splash (lancée par l'utilisateur :
+# `cd mobile && dart run flutter_native_splash:create`).
+flutter_native_splash:
+  color: "#1A3C5E"
+  image: "assets/brand/logo_mark_1024.png"
+  android_12:
+    color: "#1A3C5E"
+    image: "assets/brand/logo_mark_1024.png"
