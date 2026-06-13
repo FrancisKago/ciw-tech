@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/task.dart';
+import '../branches/branch_chip.dart';
 
 String statusLabel(TaskStatus s) => switch (s) {
       TaskStatus.assigned => 'assigné',
@@ -65,7 +66,14 @@ class TasksListScreen extends StatelessWidget {
               final t = list[i];
               return ListTile(
                 title: Text(t.title),
-                subtitle: Text('${statusLabel(t.status)} · ${t.priority.name}'),
+                subtitle: Wrap(
+                  spacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text('${statusLabel(t.status)} · ${t.priority.name}'),
+                    BranchChip(t.domaine),
+                  ],
+                ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => onTapTask(t),
               );
