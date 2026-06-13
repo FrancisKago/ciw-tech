@@ -44,6 +44,7 @@ export default async function AlertesPage({
     };
   });
 
+  // Copie explicite vers SiteRef : Map est invariant sur son type de valeur côté TS.
   const sites = new Map<string, SiteRef>();
   for (const [id, s] of dir.sites) sites.set(id, { geo: s.geo, radiusMeters: s.radiusMeters });
 
@@ -64,24 +65,54 @@ export default async function AlertesPage({
     return y.punch.clientTimestamp.getTime() - x.punch.clientTimestamp.getTime();
   });
 
+  const siteOptions = [...dir.sites.entries()]
+    .map(([id, s]) => ({ id, name: s.name }))
+    .sort((a, b) => a.name.localeCompare(b.name, "fr"));
+  const techOptions = [...dir.users.entries()]
+    .map(([id, u]) => ({ id, name: u.name }))
+    .sort((a, b) => a.name.localeCompare(b.name, "fr"));
+
   return (
     <div className="p-6">
       <h1 className="mb-4 text-2xl font-semibold">Alertes</h1>
 
-      <div className="mb-6 flex gap-2 text-sm">
-        {PERIODS.map((p) => (
-          <a
-            key={p.key}
-            href={`/alertes?period=${p.key}`}
-            className={
-              "rounded px-3 py-1 " +
-              (period === p.key ? "bg-gray-900 text-white" : "border text-gray-700 hover:bg-gray-100")
-            }
-          >
-            {p.label}
-          </a>
-        ))}
-      </div>
+      <form method="GET" className="mb-6 flex flex-wrap items-end gap-3 text-sm">
+        <label className="flex flex-col gap-1">
+          <span className="text-gray-500">Période</span>
+          <select name="period" defaultValue={period} className="rounded border px-2 py-1">
+            {PERIODS.map((p) => (
+              <option key={p.key} value={p.key}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-gray-500">Site</span>
+          <select name="site" defaultValue={sp.site ?? ""} className="rounded border px-2 py-1">
+            <option value="">Tous les sites</option>
+            {siteOptions.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-gray-500">Technicien</span>
+          <select name="tech" defaultValue={sp.tech ?? ""} className="rounded border px-2 py-1">
+            <option value="">Tous les techniciens</option>
+            {techOptions.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="submit" className="rounded bg-gray-900 px-3 py-1 text-white">
+          Filtrer
+        </button>
+      </form>
 
       <table className="w-full max-w-4xl border-collapse text-sm">
         <thead>
@@ -99,7 +130,7 @@ export default async function AlertesPage({
               <td className="py-2">{displayUser(r.punch.userId, dir)}</td>
               <td>{displaySite(r.punch.siteId ?? "", dir)}</td>
               <td>{r.punch.kind === "in" ? "Entrée" : "Sortie"}</td>
-              <td>{r.punch.clientTimestamp.toLocaleString("fr-FR")}</td>
+              <td>{r.punch.clientTimestamp.toLocaleString("fr-FR", { timeZone: "Africa/Douala" })}</td>
               <td>
                 <div className="flex flex-wrap gap-1">
                   {r.anomalies.map((a) => (

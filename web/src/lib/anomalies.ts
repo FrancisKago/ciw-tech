@@ -83,6 +83,7 @@ export function detectAnomalies(
       const site = sites.get(p.siteId);
       if (site?.geo != null && site.radiusMeters != null) {
         const dist = distanceMeters(p.geo.lat, p.geo.lng, site.geo.lat, site.geo.lng);
+        // accuracy est toujours ≥ 0 côté Android ; on garde la borne par sécurité.
         const margin = Math.max(0, p.geo.accuracy);
         if (dist - margin > site.radiusMeters) list.push(anomaly("hors-rayon"));
       }
