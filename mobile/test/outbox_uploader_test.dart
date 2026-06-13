@@ -49,6 +49,7 @@ void main() {
     final doc = await fs.collection('tasks').doc('t1').get();
     final report = doc.data()!['report'] as Map<String, dynamic>;
     expect(report['photoUrls'], contains('https://storage/t1/a.jpg'));
+    // Non-régression : le merge ne doit PAS écraser les champs frères du rapport.
     expect(report['text'], 'fait');
     expect(report['photoCount'], 1);
     expect(await outbox.count(), 0);

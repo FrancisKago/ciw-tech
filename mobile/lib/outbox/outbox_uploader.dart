@@ -37,7 +37,7 @@ class OutboxUploader {
     try {
       snap = await ref.get(const GetOptions(source: Source.cache));
       if (!snap.exists) snap = await ref.get();
-    } catch (_) {
+    } on FirebaseException catch (_) {
       snap = await ref.get();
     }
     return snap.data()?['userId'] as String?;
