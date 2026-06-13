@@ -96,15 +96,30 @@ git commit -m "feat(anomalies): helper haversineMeters (distance grand-cercle)"
 
 **Files:**
 - Modify: `web/src/lib/anomalies.ts`
+- Modify: `web/src/lib/geo.ts`
 - Test: `web/__tests__/anomalies.test.ts`
 
-D'abord ajouter les types et fabriques en tête de `anomalies.ts` (sous l'`EARTH_RADIUS_M`/`haversineMeters` existants), puis construire `detectAnomalies` règle par règle. Le **listing complet final** de la fonction est donné en fin de tâche (Step 15) pour référence.
+> **Déviation (revue Task 1) :** `web/src/lib/geo.ts` existe déjà avec `distanceMeters(lat1,lng1,lat2,lng2)`
+> (haversine) + `isOutsideSite` + `interface SiteGeo extends LatLng`. Pour ne pas dupliquer le
+> haversine ni le type :
+> 1. **Supprimer** le `haversineMeters` + `EARTH_RADIUS_M` de `anomalies.ts` (Task 1) et ses 2 tests
+>    haversine de `anomalies.test.ts` (la couverture distance reste dans `geo.test.ts`).
+> 2. **Ajouter le garde** `Math.min(1, …)` au `distanceMeters` de `geo.ts` (robustesse anti-NaN).
+> 3. `anomalies.ts` **importe** `distanceMeters` (et `LatLng`) depuis `@/lib/geo` et l'utilise dans
+>    la règle hors-rayon.
+> 4. **Renommer** le type local `SiteGeo` d'anomalies en **`SiteRef`** (le nom `SiteGeo` est déjà
+>    pris par `geo.ts` avec une forme différente). Les Steps ci-dessous reflètent déjà ce renommage.
+
+D'abord retirer le code haversine de Task 1, durcir `geo.ts`, puis ajouter les types/fabriques en tête de `anomalies.ts` et construire `detectAnomalies` règle par règle. Le **listing complet final** de la fonction est donné en fin de tâche (Step 15) pour référence.
 
 - [ ] **Step 1: Ajouter types, seuils et fabriques**
 
-Ajouter dans `web/src/lib/anomalies.ts` (au-dessus de `haversineMeters`) :
+Après avoir retiré `haversineMeters`/`EARTH_RADIUS_M`, `anomalies.ts` commence par l'import geo
+puis les types/fabriques :
 
 ```ts
+import { distanceMeters, LatLng } from "@/lib/geo";
+
 export type AnomalyType =
   | "hors-rayon"
   | "gps-imprecis"
@@ -129,8 +144,8 @@ export interface PunchForAnomaly {
   siteId: string | null;
   photoStatus: "pending" | "uploaded";
 }
-export interface SiteGeo {
-  geo: { lat: number; lng: number } | null;
+export interface SiteRef {
+  geo: LatLng | null;
   radiusMeters: number | null;
 }
 
@@ -172,12 +187,15 @@ function anomaly(type: AnomalyType): Anomaly {
 
 Ajouter à `web/__tests__/anomalies.test.ts` (en haut, après l'import, étendre l'import) :
 
+Remplacer **entièrement** le contenu de `web/__tests__/anomalies.test.ts` (les 2 tests haversine
+de Task 1 sont retirés — la distance est couverte par `geo.test.ts`) :
+
 ```ts
 import {
-  haversineMeters,
   detectAnomalies,
   PunchForAnomaly,
-  SiteGeo,
+  SiteRef,
+  Anomaly,
 } from "@/lib/anomalies";
 
 const NOW = new Date(Date.UTC(2026, 5, 13, 12, 0));
@@ -193,10 +211,10 @@ const base: PunchForAnomaly = {
 };
 const mk = (over: Partial<PunchForAnomaly>): PunchForAnomaly => ({ ...base, ...over });
 // Site s1 centré sur la position du pointage de base, rayon 100 m.
-const sites = new Map<string, SiteGeo>([
+const sites = new Map<string, SiteRef>([
   ["s1", { geo: { lat: 4.05, lng: 9.7 }, radiusMeters: 100 }],
 ]);
-const typesFor = (m: Map<string, import("@/lib/anomalies").Anomaly[]>, id: string) =>
+const typesFor = (m: Map<string, Anomaly[]>, id: string) =>
   (m.get(id) ?? []).map((a) => a.type).sort();
 
 describe("detectAnomalies — sans-site", () => {
@@ -220,7 +238,7 @@ Ajouter au bas de `web/src/lib/anomalies.ts` :
 ```ts
 export function detectAnomalies(
   punches: PunchForAnomaly[],
-  sites: Map<string, SiteGeo>,
+  sites: Map<string, SiteRef>,
   now: Date,
   opts: Partial<AnomalyThresholds> = {},
 ): Map<string, Anomaly[]> {
@@ -312,7 +330,7 @@ Dans `detectAnomalies`, juste après le bloc `gps-imprecis`, insérer :
     if (p.siteId != null && p.geo != null && !imprecise) {
       const site = sites.get(p.siteId);
       if (site?.geo != null && site.radiusMeters != null) {
-        const dist = haversineMeters(p.geo, site.geo);
+        const dist = distanceMeters(p.geo.lat, p.geo.lng, site.geo.lat, site.geo.lng);
         if (dist - p.geo.accuracy > site.radiusMeters) list.push(anomaly("hors-rayon"));
       }
     }
@@ -468,7 +486,7 @@ Expected: PASS (tous les `describe` verts).
 ```ts
 export function detectAnomalies(
   punches: PunchForAnomaly[],
-  sites: Map<string, SiteGeo>,
+  sites: Map<string, SiteRef>,
   now: Date,
   opts: Partial<AnomalyThresholds> = {},
 ): Map<string, Anomaly[]> {
@@ -486,7 +504,7 @@ export function detectAnomalies(
     if (p.siteId != null && p.geo != null && !imprecise) {
       const site = sites.get(p.siteId);
       if (site?.geo != null && site.radiusMeters != null) {
-        const dist = haversineMeters(p.geo, site.geo);
+        const dist = distanceMeters(p.geo.lat, p.geo.lng, site.geo.lat, site.geo.lng);
         if (dist - p.geo.accuracy > site.radiusMeters) list.push(anomaly("hors-rayon"));
       }
     }
@@ -629,7 +647,7 @@ Créer `web/src/app/(dashboard)/alertes/page.tsx` :
 import { db } from "@/lib/firebaseAdmin";
 import { loadDirectory, displayUser, displaySite } from "@/lib/directory";
 import { parsePeriod, PeriodKey } from "@/lib/stats";
-import { detectAnomalies, PunchForAnomaly, SiteGeo, Anomaly } from "@/lib/anomalies";
+import { detectAnomalies, PunchForAnomaly, SiteRef, Anomaly } from "@/lib/anomalies";
 
 export const dynamic = "force-dynamic";
 
@@ -672,7 +690,7 @@ export default async function AlertesPage({
     };
   });
 
-  const sites = new Map<string, SiteGeo>();
+  const sites = new Map<string, SiteRef>();
   for (const [id, s] of dir.sites) sites.set(id, { geo: s.geo, radiusMeters: s.radiusMeters });
 
   const byPunch = detectAnomalies(punches, sites, now);
