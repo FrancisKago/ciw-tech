@@ -127,4 +127,20 @@ describe("detectAnomalies — doublon", () => {
     );
     expect(typesFor(m, "a")).not.toContain("doublon");
   });
+  it("ne signale pas deux 'in' espacés d'exactement 5 min (borne stricte)", () => {
+    const m = detectAnomalies(
+      [mk({ id: "a", kind: "in", clientTimestamp: t10 }), mk({ id: "b", kind: "in", clientTimestamp: plus(5) })],
+      sites, NOW,
+    );
+    expect(typesFor(m, "a")).not.toContain("doublon");
+  });
+});
+
+describe("detectAnomalies — geo absent (défensif)", () => {
+  it("ne plante pas et ne signale ni gps-imprecis ni hors-rayon quand geo est null", () => {
+    const m = detectAnomalies([mk({ id: "p1", geo: null })], sites, NOW);
+    expect(typesFor(m, "p1")).not.toContain("gps-imprecis");
+    expect(typesFor(m, "p1")).not.toContain("hors-rayon");
+    expect(m.has("p1")).toBe(false); // pointage par ailleurs nominal → aucune anomalie
+  });
 });

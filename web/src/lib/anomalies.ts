@@ -83,7 +83,8 @@ export function detectAnomalies(
       const site = sites.get(p.siteId);
       if (site?.geo != null && site.radiusMeters != null) {
         const dist = distanceMeters(p.geo.lat, p.geo.lng, site.geo.lat, site.geo.lng);
-        if (dist - p.geo.accuracy > site.radiusMeters) list.push(anomaly("hors-rayon"));
+        const margin = Math.max(0, p.geo.accuracy);
+        if (dist - margin > site.radiusMeters) list.push(anomaly("hors-rayon"));
       }
     }
 
