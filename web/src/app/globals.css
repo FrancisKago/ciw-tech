@@ -3,6 +3,11 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --brand-bleu-nuit: #1A3C5E;
+  --brand-bleu-nuit-fonce: #13314D;
+  --brand-orange: #E67E22;
+  --brand-orange-tint: #FEF0E3;
+  --brand-page: #F4F6F9;
 }
 
 @theme inline {
