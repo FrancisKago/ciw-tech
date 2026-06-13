@@ -105,8 +105,8 @@ describe("hoursPerSite", () => {
 
 describe("completionByDomaine", () => {
   const range = { start: new Date(Date.UTC(2026, 5, 1)), end: new Date(Date.UTC(2026, 5, 30)) };
-  const mk = (domaine: string | undefined, status: string) =>
-    ({ assigneeId: "u1", siteId: "s1", status, dueAt: new Date(Date.UTC(2026, 5, 10)), createdAt: null, domaine } as any);
+  const mk = (domaine: string | undefined, status: string): StatsTask =>
+    ({ assigneeId: "u1", siteId: "s1", status, dueAt: new Date(Date.UTC(2026, 5, 10)), createdAt: null, domaine });
   it("regroupe complétion par branche, fallback 'non-precise'", () => {
     const m = completionByDomaine(
       [mk("electricite", "done"), mk("electricite", "assigned"), mk(undefined, "approved")],
