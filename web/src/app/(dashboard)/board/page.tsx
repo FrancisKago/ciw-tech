@@ -2,6 +2,7 @@ import Link from "next/link";
 import { db } from "@/lib/firebaseAdmin";
 import { loadDirectory, displayUser, displaySite, Directory } from "@/lib/directory";
 import { groupByStatus, isLate, BoardTask, BoardColumns } from "@/lib/board";
+import BranchBadge from "@/components/BranchBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,7 @@ export default async function BoardPage({
       assigneeId: data.assigneeId ?? "",
       status: data.status ?? "assigned",
       dueAt: data.dueAt ? data.dueAt.toDate() : null,
+      domaine: data.domaine ?? undefined,
       hasReport: data.report != null,
     };
   });
@@ -95,6 +97,9 @@ function Card({ task, dir, late }: { task: BoardTask; dir: Directory; late: bool
       <div className="font-medium">{task.title}</div>
       <div className="mt-1 text-sm text-gray-600">
         👤 {displayUser(task.assigneeId, dir)} · 📍 {displaySite(task.siteId, dir)}
+      </div>
+      <div className="mt-1">
+        <BranchBadge domaine={task.domaine} />
       </div>
       {late ? (
         <div className="mt-1 text-xs font-semibold text-red-600">

@@ -5,6 +5,7 @@ export interface BoardTask {
   assigneeId: string;
   status: string;
   dueAt: Date | null;
+  domaine?: string;
   hasReport: boolean;
 }
 

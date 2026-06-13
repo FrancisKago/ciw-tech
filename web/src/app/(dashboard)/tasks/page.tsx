@@ -1,6 +1,7 @@
 import { db } from "@/lib/firebaseAdmin";
 import { mapTaskDoc, TaskRow } from "@/lib/tasks";
 import { loadDirectory, displayUser, displaySite } from "@/lib/directory";
+import BranchBadge from "@/components/BranchBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export default async function TasksPage() {
       <table className="w-full max-w-4xl border-collapse text-sm">
         <thead>
           <tr className="border-b text-left text-gray-500">
-            <th className="py-2">Titre</th><th>Site</th><th>Assigné</th><th>Statut</th><th>Échéance</th><th>Rapport</th>
+            <th className="py-2">Titre</th><th>Site</th><th>Domaine</th><th>Assigné</th><th>Statut</th><th>Échéance</th><th>Rapport</th>
           </tr>
         </thead>
         <tbody>
@@ -26,13 +27,14 @@ export default async function TasksPage() {
             <tr key={t.id} className="border-b">
               <td className="py-2">{t.title}</td>
               <td>{displaySite(t.siteId, dir)}</td>
+              <td><BranchBadge domaine={t.domaine} /></td>
               <td>{displayUser(t.assigneeId, dir)}</td>
               <td>{t.status}</td>
               <td>{t.dueAt ? new Date(t.dueAt).toLocaleDateString("fr-FR") : "—"}</td>
               <td>{t.hasReport ? "✓" : "—"}</td>
             </tr>
           ))}
-          {rows.length === 0 && <tr><td colSpan={6} className="py-2 text-gray-400">Aucune tâche.</td></tr>}
+          {rows.length === 0 && <tr><td colSpan={7} className="py-2 text-gray-400">Aucune tâche.</td></tr>}
         </tbody>
       </table>
     </main>
