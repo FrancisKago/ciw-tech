@@ -94,6 +94,19 @@ périodiquement (20 s) + après chaque pointage. Vidanges fusionnées (verrou an
   d'env (Clerk + Firebase). ⚠ `FIREBASE_PRIVATE_KEY` : coller sans guillemets, garder les `\n`.
   ⚠ instance Clerk **développement** (`pk_test_…`) — passer en prod = réappliquer la
   personnalisation du token de session (`{ "public_metadata": "{{user.public_metadata}}" }`).
-- **Phase 4 (durcissement : App Check, anomalies, chemins Storage par user, publication Play Store)** : à faire.
+- **Phase 4 (durcissement)** — décomposée en 4 chantiers indépendants (chacun son cycle spec→plan→exec) :
+  - **Détection d'anomalies de pointage** : ✅ livré (code) + mergé sur `main` (merge `--no-ff`).
+    Librairie pure `web/src/lib/anomalies.ts` (`detectAnomalies` : hors-rayon tolérant via
+    `geo.ts:distanceMeters`, GPS imprécis >100 m, photo manquante grâce 24 h, sans-site, doublon
+    <5 min même technicien+kind, horloge asymétrique client>serveur >10 min) + page backoffice
+    `/alertes` (lecture seule, filtres site/technicien/période en formulaire GET, heure en
+    Africa/Douala, tri alertes d'abord). `directory.ts` expose désormais geo+radiusMeters des sites.
+    **Aucun changement de règles/Function/mobile.** Tests `npx jest` **74/74**, `tsc`/`eslint`/
+    `next build` OK. Spec : `docs/superpowers/specs/2026-06-13-phase-4-detection-anomalies-design.md`,
+    plan : `docs/superpowers/plans/2026-06-13-phase-4-detection-anomalies.md`. **Reste côté user :
+    rien (auto-deploy Vercel sur push `main`) ; valider la page `/alertes` sur Vercel.**
+  - **App Check** (attestation Play Integrity, enforcement progressif) : à faire.
+  - **Chemins Storage par utilisateur** (`punches/{userId}/{punchId}.jpg`) : à faire.
+  - **Publication Play Store** (signing, fiche, confidentialité, rollout) : à faire.
 
 Voir **docs/HANDOFF.md** pour reprendre exactement où on en est.

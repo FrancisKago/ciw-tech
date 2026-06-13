@@ -1,11 +1,41 @@
 # Session Handoff — Cameroon Innovation
 
 **Date :** 2026-06-13 (dernière session)
-**Frontière actuelle :** **Cycle #5 (managers = aussi techniciens) livré + mergé sur `main`
-(`b338f01`) + Functions déployées**, et **backoffice déployé sur Vercel** (auto-deploy sur push
-`main`). Détails : section « Cycle #5 » et « Backoffice déployé sur Vercel » plus bas + « Pour
-reprendre ». Reste optionnel : confirmation Partie B sur appareil. Prochain : Phase 4 ou dette
-« Sans site ». — Historique des phases précédentes ci-dessous.
+**Frontière actuelle :** **Phase 4 — chantier « détection d'anomalies de pointage » livré + mergé
+sur `main` (merge `--no-ff`)**. Page backoffice `/alertes` (lecture seule) + librairie pure
+`web/src/lib/anomalies.ts`. **Aucun changement de règles/Function/mobile** → pas de `firebase
+deploy` ; le push sur `main` auto-déploie le backoffice sur Vercel. Détails : section « Phase 4 —
+détection d'anomalies » plus bas. **Reste côté user :** valider la page `/alertes` sur Vercel.
+Chantiers Phase 4 restants (indépendants) : App Check, chemins Storage par user, Play Store.
+Autre dette possible : « Sans site » des stats. — Historique des phases précédentes ci-dessous.
+
+## Phase 4 — détection d'anomalies de pointage : livré + mergé sur `main` ✅
+Spec : `docs/superpowers/specs/2026-06-13-phase-4-detection-anomalies-design.md`.
+Plan : `docs/superpowers/plans/2026-06-13-phase-4-detection-anomalies.md`.
+Exécution subagent-driven (6 tâches, TDD, revue spec + qualité par tâche + revue finale).
+
+- **Approche** : détection **pure et testée** + calcul **au rendu** au backoffice. Les entrées
+  (geo, accuracy, siteId, timestamps, photoStatus) sont déjà stockées immuablement sur chaque
+  `punches` → recalculer le drapeau au rendu est aussi fiable que le stocker. Pas de push (différé).
+- **`web/src/lib/anomalies.ts`** : `detectAnomalies(punches, sites, now, opts?)` → `Map<punchId, Anomaly[]>`.
+  6 règles : **hors-rayon** (tolérant : `distanceMeters - max(0,accuracy) > radiusMeters`, réutilise
+  `geo.ts`), **gps-imprécis** (>100 m), **photo-manquante** (pending > 24 h), **sans-site**,
+  **doublon** (même technicien + même kind < 5 min, les deux signalés), **horloge** (asymétrique :
+  clientTimestamp en avance > 10 min sur serverTimestamp ; le retard de synchro offline n'est PAS
+  signalé). Sévérités : alerte (hors-rayon/sans-site/horloge) vs info (autres). Seuils dans
+  `DEFAULT_THRESHOLDS`.
+- **Déviation de plan (revue Task 1)** : `geo.ts` possédait déjà `distanceMeters`/`isOutsideSite` ;
+  le haversine dupliqué d'anomalies.ts a été retiré (anomalies → geo), garde `Math.min(1,…)` ajoutée
+  à `geo.ts`, type local renommé `SiteGeo`→`SiteRef` (collision).
+- **`web/src/lib/directory.ts`** : `Directory.sites` porte désormais `geo` + `radiusMeters`
+  (rétro-compatible ; les autres pages ne lisent que `.name`).
+- **`web/src/app/(dashboard)/alertes/page.tsx`** : Server Component lecture seule, formulaire GET
+  (période + site + technicien), tri alertes d'abord, badges colorés, heure en **Africa/Douala**
+  (le serveur Vercel est en UTC). Entrée sidebar « Alertes » ajoutée. Role gate hérité du layout.
+- **Tests** : `npx jest` **74/74** ; `npx tsc --noEmit`, `npx eslint .`, `npx next build` OK
+  (route `/alertes` présente). Pas d'infra de test composant (cohérent Phase 3).
+- **Reste côté user** : valider `/alertes` sur Vercel après auto-deploy (rappel : `next dev`
+  Turbopack peut crasher en local sur certaines routes → la prod Vercel fait foi).
 
 **État global (historique) :** Phases 0 + 1 + 2 **terminées, déployées et validées de bout en bout
 sur appareil réel**. Phase 2 mergée sur `main` ; règles + Storage + Functions déployées
