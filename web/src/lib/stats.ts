@@ -2,7 +2,7 @@ import { computeWorkedMinutes, PunchLite } from "@/lib/hours";
 import { isLate } from "@/lib/board";
 
 export interface StatsPunch { userId: string; kind: "in" | "out"; at: Date; siteId: string; }
-export interface StatsTask { assigneeId: string; siteId: string; status: string; dueAt: Date | null; createdAt: Date | null; }
+export interface StatsTask { assigneeId: string; siteId: string; status: string; dueAt: Date | null; createdAt: Date | null; domaine?: string; }
 
 export type PeriodKey = "today" | "7d" | "30d";
 export interface Period { period: PeriodKey; start: Date; end: Date; }
@@ -102,6 +102,23 @@ export function hoursPerSite(punches: StatsPunch[]): Map<string, number> {
     }
     for (const u of byUser.values()) minutes += computeWorkedMinutes(u).minutes;
     out.set(siteId, minutes);
+  }
+  return out;
+}
+
+/** Complétion par branche (domaine), fallback 'non-precise'. */
+export function completionByDomaine(
+  tasks: StatsTask[],
+  range: { start: Date; end: Date },
+): Map<string, { done: number; total: number }> {
+  const out = new Map<string, { done: number; total: number }>();
+  for (const t of tasks) {
+    if (!taskInPeriod(t, range.start, range.end)) continue;
+    const k = t.domaine ?? "non-precise";
+    const cur = out.get(k) ?? { done: 0, total: 0 };
+    cur.total += 1;
+    if (t.status === "done" || t.status === "approved") cur.done += 1;
+    out.set(k, cur);
   }
   return out;
 }

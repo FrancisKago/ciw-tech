@@ -12,10 +12,11 @@ void main() {
     await tester.pumpWidget(MaterialApp(
       home: TaskCreateScreen(
         sites: sites, technicians: techs, isOnline: true,
-        onCreate: (title, desc, siteId, assigneeId, priority, dueAt) async {
+        onCreate: (title, desc, siteId, assigneeId, priority, dueAt,
+            {required DomaineTrade domaine}) async {
           sent = {
             'title': title, 'siteId': siteId, 'assigneeId': assigneeId,
-            'priority': priority,
+            'priority': priority, 'domaine': domaine,
           };
         },
       ),
@@ -36,7 +37,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(
       home: TaskCreateScreen(
         sites: sites, technicians: techs, isOnline: false,
-        onCreate: (a, b, c, d, e, f) async { called = true; },
+        onCreate: (a, b, c, d, e, f, {required DomaineTrade domaine}) async { called = true; },
       ),
     ));
     await tester.enterText(find.byKey(const Key('task_title')), 'X');
@@ -50,7 +51,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(
       home: TaskCreateScreen(
         sites: const [], technicians: const [], isOnline: true,
-        onCreate: (a, b, c, d, e, f) async {},
+        onCreate: (a, b, c, d, e, f, {required DomaineTrade domaine}) async {},
       ),
     ));
     expect(find.textContaining('Aucun site'), findsOneWidget);
@@ -66,7 +67,8 @@ void main() {
       home: TaskCreateScreen(
         sites: sites, technicians: techs, isOnline: true,
         self: const (id: 'mgr', name: 'Moi (vous)'),
-        onCreate: (title, desc, siteId, assigneeId, priority, dueAt) async {
+        onCreate: (title, desc, siteId, assigneeId, priority, dueAt,
+            {required DomaineTrade domaine}) async {
           assignee = assigneeId;
         },
       ),
@@ -90,7 +92,8 @@ void main() {
       home: TaskCreateScreen(
         sites: sites, technicians: const [], isOnline: true,
         self: const (id: 'mgr', name: 'Moi (vous)'),
-        onCreate: (title, desc, siteId, assigneeId, priority, dueAt) async {
+        onCreate: (title, desc, siteId, assigneeId, priority, dueAt,
+            {required DomaineTrade domaine}) async {
           assignee = assigneeId;
         },
       ),
@@ -101,5 +104,37 @@ void main() {
     await tester.tap(find.byKey(const Key('create_submit')));
     await tester.pump();
     expect(assignee, 'mgr'); // self pré-sélectionné faute de technicien
+  });
+
+  testWidgets('sélecteur domaine présent, valeur transmise via onCreate', (tester) async {
+    DomaineTrade? captured;
+    await tester.pumpWidget(MaterialApp(
+      home: TaskCreateScreen(
+        sites: sites, technicians: techs, isOnline: true,
+        onCreate: (title, desc, siteId, assigneeId, priority, dueAt,
+            {required DomaineTrade domaine}) async {
+          captured = domaine;
+        },
+      ),
+    ));
+
+    // Le sélecteur est visible
+    expect(find.byKey(const Key('domaine-selector')), findsOneWidget);
+
+    // Valeur par défaut : Électricité
+    await tester.enterText(find.byKey(const Key('task_title')), 'Test domaine');
+    await tester.tap(find.byKey(const Key('create_submit')));
+    await tester.pump();
+    expect(captured, DomaineTrade.electricite);
+
+    // Changer vers Plomberie
+    captured = null;
+    await tester.tap(find.byKey(const Key('domaine-selector')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Plomberie').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('create_submit')));
+    await tester.pump();
+    expect(captured, DomaineTrade.plomberie);
   });
 }

@@ -23,6 +23,15 @@ extension TaskPriorityX on TaskPriority {
       TaskPriority.values.firstWhere((p) => p.name == w, orElse: () => TaskPriority.normal);
 }
 
+enum DomaineTrade { electricite, informatique, plomberie, autre }
+extension DomaineTradeX on DomaineTrade {
+  String get wire => name;
+  static DomaineTrade? fromWire(String? w) {
+    if (w == null) return null;
+    return DomaineTrade.values.firstWhere((d) => d.name == w, orElse: () => DomaineTrade.autre);
+  }
+}
+
 class TaskReport {
   TaskReport({
     required this.text, required this.minutesSpent,
@@ -57,12 +66,14 @@ class Task {
     required this.id, required this.title, required this.description,
     required this.siteId, required this.assigneeId, required this.createdBy,
     required this.priority, required this.dueAt, required this.status, this.report,
+    this.domaine,
   });
   final String id, title, description, siteId, assigneeId, createdBy;
   final TaskPriority priority;
   final DateTime? dueAt;
   final TaskStatus status;
   final TaskReport? report;
+  final DomaineTrade? domaine;
 
   Map<String, dynamic> toFirestore() => {
         'title': title,
@@ -74,6 +85,7 @@ class Task {
         'dueAt': dueAt == null ? null : Timestamp.fromDate(dueAt!),
         'status': status.wire,
         'report': report?.toMap(),
+        if (domaine != null) 'domaine': domaine!.wire,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       };
@@ -89,5 +101,6 @@ class Task {
         dueAt: (m['dueAt'] as Timestamp?)?.toDate(),
         status: TaskStatusX.fromWire((m['status'] ?? 'assigned') as String),
         report: TaskReport.fromMap(m['report'] as Map<String, dynamic>?),
+        domaine: DomaineTradeX.fromWire(m['domaine'] as String?),
       );
 }

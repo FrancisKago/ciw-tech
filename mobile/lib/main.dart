@@ -11,6 +11,7 @@ import 'outbox/sync_controller.dart';
 import 'pointage/punch_repository.dart';
 import 'tasks/task_repository.dart';
 import 'notifications/fcm_service.dart';
+import 'theme/app_theme.dart';
 
 /// Clé publiable Clerk, fournie au lancement :
 /// `flutter run --dart-define=CLERK_PUBLISHABLE_KEY=pk_...`
@@ -55,7 +56,7 @@ class PointageApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true);
+    final theme = AppTheme.light();
 
     // Pas de clé Clerk fournie : on affiche un écran d'aide explicite.
     if (clerkPublishableKey.isEmpty) {

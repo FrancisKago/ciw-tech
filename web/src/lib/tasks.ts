@@ -14,6 +14,7 @@ export interface TaskRow {
   createdBy: string;
   status: string;
   dueAt: string | null;
+  domaine?: string;
   hasReport: boolean;
   report: ReportDetail | null;
   approvedBy: string | null;
@@ -37,6 +38,7 @@ interface TaskDoc {
   createdBy?: string;
   status?: string;
   dueAt?: TimestampLike | null;
+  domaine?: string;
   report?: ReportDoc | null;
   approvedBy?: string | null;
   approvedAt?: TimestampLike | null;
@@ -63,6 +65,7 @@ export function mapTaskDoc(id: string, data: TaskDoc): TaskRow {
     createdBy: data.createdBy ?? "",
     status: data.status ?? "assigned",
     dueAt: data.dueAt ? data.dueAt.toDate().toISOString() : null,
+    domaine: data.domaine ?? undefined,
     hasReport: data.report != null,
     report,
     approvedBy: data.approvedBy ?? null,

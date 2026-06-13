@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/task.dart';
+import '../branches/branch_chip.dart';
 import 'tasks_list_screen.dart' show statusLabel;
 
 class TaskDetailScreen extends StatelessWidget {
@@ -21,6 +22,8 @@ class TaskDetailScreen extends StatelessWidget {
           Text('Statut : ${statusLabel(task.status)}'),
           const SizedBox(height: 8),
           Text('Priorité : ${task.priority.name}'),
+          const SizedBox(height: 8),
+          BranchChip(task.domaine),
           const SizedBox(height: 16),
           Text(task.description),
         ]),

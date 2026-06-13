@@ -50,4 +50,20 @@ describe("mapTaskDoc", () => {
     expect(row.hasReport).toBe(false);
     expect(row.approvedBy).toBeNull();
   });
+
+  it("préserve domaine quand présent", () => {
+    const row = mapTaskDoc("t5", {
+      title: "Y", siteId: "s1", assigneeId: "tech_1", status: "assigned",
+      dueAt: null, report: null, domaine: "electricite",
+    });
+    expect(row.domaine).toBe("electricite");
+  });
+
+  it("domaine undefined quand absent", () => {
+    const row = mapTaskDoc("t6", {
+      title: "Z", siteId: "s1", assigneeId: "tech_1", status: "assigned",
+      dueAt: null, report: null,
+    });
+    expect(row.domaine).toBeUndefined();
+  });
 });

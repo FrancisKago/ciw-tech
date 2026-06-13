@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../branches/branch_meta.dart';
 import '../models/task.dart';
 
 typedef SiteOption = ({String id, String name});
@@ -16,7 +17,8 @@ class TaskCreateScreen extends StatefulWidget {
   final bool isOnline;
   final Future<void> Function(
     String title, String description, String siteId, String assigneeId,
-    TaskPriority priority, DateTime? dueAt) onCreate;
+    TaskPriority priority, DateTime? dueAt,
+    {required DomaineTrade domaine}) onCreate;
 
   @override
   State<TaskCreateScreen> createState() => _TaskCreateScreenState();
@@ -27,6 +29,7 @@ class _TaskCreateScreenState extends State<TaskCreateScreen> {
   final _desc = TextEditingController();
   String? _siteId, _assigneeId;
   TaskPriority _priority = TaskPriority.normal;
+  DomaineTrade _domaine = DomaineTrade.electricite;
   DateTime? _dueAt;
   String? _error;
   bool _busy = false;
@@ -57,7 +60,8 @@ class _TaskCreateScreenState extends State<TaskCreateScreen> {
     }
     setState(() { _busy = true; _error = null; });
     await widget.onCreate(
-      _title.text.trim(), _desc.text.trim(), _siteId!, _assigneeId!, _priority, _dueAt);
+      _title.text.trim(), _desc.text.trim(), _siteId!, _assigneeId!, _priority, _dueAt,
+      domaine: _domaine);
     if (mounted) {
       setState(() => _busy = false);
       Navigator.of(context).maybePop();
@@ -116,6 +120,15 @@ class _TaskCreateScreenState extends State<TaskCreateScreen> {
                 .map((p) => DropdownMenuItem(value: p, child: Text(p.name)))
                 .toList(),
             onChanged: (v) => setState(() => _priority = v ?? TaskPriority.normal)),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<DomaineTrade>(
+            key: const Key('domaine-selector'),
+            initialValue: _domaine,
+            decoration: const InputDecoration(labelText: 'Domaine'),
+            items: DomaineTrade.values
+                .map((d) => DropdownMenuItem(value: d, child: Text(branchMeta(d).label)))
+                .toList(),
+            onChanged: (v) => setState(() => _domaine = v ?? DomaineTrade.electricite)),
           const SizedBox(height: 24),
           if (_error != null)
             Padding(padding: const EdgeInsets.only(bottom: 12),

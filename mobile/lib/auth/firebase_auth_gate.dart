@@ -157,7 +157,8 @@ class _FirebaseAuthGateState extends State<FirebaseAuthGate> {
                     technicians: techs,
                     isOnline: online,
                     self: (id: uid, name: 'Moi (vous)'),
-                    onCreate: (title, desc, siteId, assigneeId, priority, dueAt) =>
+                    onCreate: (title, desc, siteId, assigneeId, priority, dueAt,
+                            {required DomaineTrade domaine}) =>
                         widget.taskRepo.createTask(
                             title: title,
                             description: desc,
@@ -165,7 +166,8 @@ class _FirebaseAuthGateState extends State<FirebaseAuthGate> {
                             assigneeId: assigneeId,
                             createdBy: uid,
                             priority: priority,
-                            dueAt: dueAt),
+                            dueAt: dueAt,
+                            domaine: domaine),
                   );
                 },
               );

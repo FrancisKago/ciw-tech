@@ -18,12 +18,14 @@ class TaskRepository {
     required String createdBy,
     required TaskPriority priority,
     DateTime? dueAt,
+    DomaineTrade? domaine,
   }) async {
     final ref = _col.doc();
     final task = Task(
       id: ref.id, title: title, description: description, siteId: siteId,
       assigneeId: assigneeId, createdBy: createdBy, priority: priority,
       dueAt: dueAt, status: TaskStatus.assigned, report: null,
+      domaine: domaine,
     );
     await ref.set(task.toFirestore());
     return ref.id;
