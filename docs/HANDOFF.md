@@ -2,13 +2,13 @@
 
 **Date :** 2026-06-13 (dernière session)
 **Frontière actuelle :** **Refonte design — Cycle 1 « Identité visuelle » livré + mergé sur `main`
-(merge `--no-ff`)**. Logo Cameroon Innovation recréé (SVG + PNG 1024), thème clair bleu nuit/orange
-(mobile + web), système de 3 branches couleur+icône data-driven (`Task.domaine`) affiché partout
-(mobile + web + stats). **Aucun changement de règles Firestore.** Tests mobile 56/56 + analyze, web
-80/80 + tsc/eslint/build. **Reste côté user :** web s'auto-déploie sur Vercel (push `main`) → valider
-le rendu ; **mobile** = `cd mobile && dart run flutter_launcher_icons && dart run
-flutter_native_splash:create` puis build APK + validation appareil (icône, splash, thème, sélecteur
-de domaine, puces de branche). Détails : section « Refonte design — Cycle 1 » plus bas.
+(merge `--no-ff`) + VALIDÉ SUR TABLETTE**. Logo Cameroon Innovation recréé (SVG + PNG 1024), thème
+clair bleu nuit/orange (mobile + web), système de 3 branches couleur+icône data-driven
+(`Task.domaine`) affiché partout (mobile + web + stats). **Aucun changement de règles Firestore.**
+Tests mobile 56/56 + analyze, web 80/80 + tsc/eslint/build. Icône lanceur + splash Android **générés
+et committés** (`b438341`). App **lancée et validée sur la tablette** (thème, branches OK). Reste
+côté user : valider aussi le rendu **web** sur Vercel (auto-deploy sur push `main`). Détails :
+section « Refonte design — Cycle 1 » plus bas.
 **Prochain : Cycle 2 — refonte du formulaire de rapport CI-F-003** (réutilise `domaine`).
 
 ⚠ **Rappels en attente (chantiers précédents, non bloqués par ce cycle)** :

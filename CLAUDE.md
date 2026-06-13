@@ -118,7 +118,7 @@ périodiquement (20 s) + après chaque pointage. Vidanges fusionnées (verrou an
   - **App Check** (attestation Play Integrity, enforcement progressif) : à faire.
   - **Publication Play Store** (signing, fiche, confidentialité, rollout) : à faire.
 - **Refonte design** (initiative parallèle, hors « durcissement ») :
-  - **Cycle 1 — Identité visuelle** : ✅ livré (code) + mergé sur `main` (merge `--no-ff`).
+  - **Cycle 1 — Identité visuelle** : ✅ livré + mergé sur `main` (merge `--no-ff`) + **validé sur appareil** (tablette).
     Logo Cameroon Innovation recréé en SVG (`assets/brand/` mobile + `web/public/brand/`) +
     PNG 1024 lanceur ; thème clair bleu nuit `#1A3C5E` / orange `#E67E22` (Flutter `AppTheme`/
     `AppColors` + web tokens `globals.css` + Sidebar bleu nuit) ; **système de 3 branches**
@@ -127,11 +127,11 @@ périodiquement (20 s) + après chaque pointage. Vidanges fusionnées (verrou an
     création) et web (`BranchBadge` board/détail/table + stats « complétion par branche »).
     **Aucun changement de règles Firestore.** Tests mobile `flutter test` **56/56** + analyze ;
     web `npx jest` **80/80** + tsc/eslint/next build. Spec/plan :
-    `docs/superpowers/{specs,plans}/2026-06-13-identite-visuelle*`. **Reste côté user :** web
-    auto-deploy Vercel sur push `main` (valider rendu) ; mobile = `dart run flutter_launcher_icons`
-    + `flutter_native_splash:create` puis build APK + validation appareil (icône, splash, thème,
-    sélecteur domaine, puces). ⚠ divergence mineure assumée : un `domaine` *malformé* (jamais écrit
-    par l'app) → mobile `autre`, web « Non précisé » ; absent → « Non précisé »/null des deux côtés.
+    `docs/superpowers/{specs,plans}/2026-06-13-identite-visuelle*`. Icône lanceur + splash Android
+    **générés et committés** (`flutter_launcher_icons` + `native_splash`, codegen sans Gradle).
+    **Validé sur tablette** (app lancée, thème/branches OK). ⚠ divergence mineure assumée : un
+    `domaine` *malformé* (jamais écrit par l'app) → mobile `autre`, web « Non précisé » ; absent →
+    « Non précisé »/null des deux côtés.
   - **Cycle 2 — Refonte du formulaire de rapport (CI-F-003)** : à faire (réutilisera `domaine`).
     Le Word de référence : `…/CIW/Gestion_Interventions/04_Rapport_Intervention.docx` (sections
     Identification/Travaux/Matériaux/Observations/Statut+Satisfaction/Signatures).
