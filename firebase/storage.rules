@@ -7,12 +7,11 @@ service firebase.storage {
         (request.auth.token.role == "manager" || request.auth.token.role == "admin");
     }
 
-    // Photos de pointage : chemin `punches/{punchId}.jpg`.
-    // Un utilisateur connecté peut déposer sa photo (≤ 10 Mo) ; managers/admins lisent.
-    // NOTE durcissement (phase 4) : passer à `punches/{userId}/{punchId}.jpg`
-    // pour restreindre l'écriture au propriétaire.
-    match /punches/{fileName} {
-      allow write: if isSignedIn() && request.resource.size < 10 * 1024 * 1024;
+    // Photos de pointage : chemin `punches/{userId}/{punchId}.jpg`.
+    // Écriture réservée au propriétaire (auth.uid == userId), ≤ 10 Mo ; managers/admins lisent.
+    match /punches/{userId}/{fileName} {
+      allow write: if isSignedIn() && request.auth.uid == userId
+                   && request.resource.size < 10 * 1024 * 1024;
       allow read: if isManager();
     }
 
