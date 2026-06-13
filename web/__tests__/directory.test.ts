@@ -2,7 +2,7 @@ import { displayUser, displaySite, clerkDisplayName, Directory } from "@/lib/dir
 
 const dir: Directory = {
   users: new Map([["u1", { name: "Paul Mbarga" }]]),
-  sites: new Map([["s1", { name: "Douala-Nord" }]]),
+  sites: new Map([["s1", { name: "Douala-Nord", geo: { lat: 4.0511, lng: 9.7679 }, radiusMeters: 500 }]]),
 };
 
 describe("displayUser", () => {
