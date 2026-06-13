@@ -85,7 +85,14 @@ class _PointageScreenState extends State<PointageScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pointage'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset('assets/brand/logo_mark_1024.png', height: 28),
+            const SizedBox(width: 8),
+            const Text('Cameroon Innovation'),
+          ],
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
