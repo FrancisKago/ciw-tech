@@ -7,10 +7,12 @@ typedef TechOption = ({String id, String name});
 class TaskCreateScreen extends StatefulWidget {
   const TaskCreateScreen({
     super.key, required this.sites, required this.technicians,
-    required this.onCreate, this.isOnline = true,
+    required this.onCreate, this.isOnline = true, this.self,
   });
   final List<SiteOption> sites;
   final List<TechOption> technicians;
+  /// Option « soi » (manager qui s'auto-assigne). Si non nul, préfixe la liste.
+  final TechOption? self;
   final bool isOnline;
   final Future<void> Function(
     String title, String description, String siteId, String assigneeId,
@@ -29,14 +31,19 @@ class _TaskCreateScreenState extends State<TaskCreateScreen> {
   String? _error;
   bool _busy = false;
 
+  List<TechOption> get _assigneeOptions =>
+      [if (widget.self != null) widget.self!, ...widget.technicians];
+
   bool get _canSubmit =>
-      !_busy && widget.sites.isNotEmpty && widget.technicians.isNotEmpty;
+      !_busy && widget.sites.isNotEmpty && _assigneeOptions.isNotEmpty;
 
   @override
   void initState() {
     super.initState();
     if (widget.sites.isNotEmpty) _siteId = widget.sites.first.id;
-    if (widget.technicians.isNotEmpty) _assigneeId = widget.technicians.first.id;
+    _assigneeId = widget.technicians.isNotEmpty
+        ? widget.technicians.first.id
+        : widget.self?.id;
   }
 
   Future<void> _submit() async {
@@ -87,7 +94,7 @@ class _TaskCreateScreenState extends State<TaskCreateScreen> {
                   .toList(),
               onChanged: (v) => setState(() => _siteId = v)),
           const SizedBox(height: 12),
-          if (widget.technicians.isEmpty)
+          if (_assigneeOptions.isEmpty)
             const ListTile(
               leading: Icon(Icons.person_off, color: Colors.orange),
               title: Text('Aucun technicien disponible'),
@@ -97,7 +104,7 @@ class _TaskCreateScreenState extends State<TaskCreateScreen> {
             DropdownButtonFormField<String>(
               initialValue: _assigneeId,
               decoration: const InputDecoration(labelText: 'Technicien'),
-              items: widget.technicians
+              items: _assigneeOptions
                   .map((t) => DropdownMenuItem(value: t.id, child: Text(t.name)))
                   .toList(),
               onChanged: (v) => setState(() => _assigneeId = v)),

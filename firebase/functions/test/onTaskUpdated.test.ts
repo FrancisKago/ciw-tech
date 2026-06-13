@@ -26,6 +26,18 @@ describe("routeStatusChange", () => {
     const out = routeStatusChange({ ...base, status: "done" }, { ...base, status: "done" });
     expect(out).toEqual([]);
   });
+
+  it("auto-assignation : done n'envoie PAS report_submitted vers soi", () => {
+    const self = { status: "in_progress", createdBy: "mgr", assigneeId: "mgr" };
+    const out = routeStatusChange(self, { ...self, status: "done" });
+    expect(out).toEqual([]);
+  });
+
+  it("auto-assignation : approved est tout de même émis", () => {
+    const self = { status: "done", createdBy: "mgr", assigneeId: "mgr" };
+    const out = routeStatusChange(self, { ...self, status: "approved" });
+    expect(out).toEqual([{ kind: "approved", recipientId: "mgr" }]);
+  });
 });
 
 describe("builders de message", () => {

@@ -11,9 +11,12 @@ export type StatusNotice =
 /** Décide quels push émettre selon la transition de statut. Pur, testable. */
 export function routeStatusChange(before: TaskState, after: TaskState): StatusNotice[] {
   const notices: StatusNotice[] = [];
-  if (before.status !== "done" && after.status === "done") {
+  // Auto-assignation : le push « à valider » irait au manager lui-même → on l'omet.
+  if (before.status !== "done" && after.status === "done"
+      && after.assigneeId !== after.createdBy) {
     notices.push({ kind: "report_submitted", recipientId: after.createdBy });
   }
+  // Le push « validée » est conservé même en auto-assignation (informe l'exécutant).
   if (before.status !== "approved" && after.status === "approved") {
     notices.push({ kind: "approved", recipientId: after.assigneeId });
   }

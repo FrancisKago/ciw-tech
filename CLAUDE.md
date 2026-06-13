@@ -80,6 +80,15 @@ périodiquement (20 s) + après chaque pointage. Vidanges fusionnées (verrou an
   technicien→manager à la soumission, manager→technicien à la validation) **créée en prod**.
   Règles durcies (l'assigné ne peut plus poser `approved` ; patch rapport autorisé si statut
   inchangé) — **tests de règles 15/15 verts (émulateur)**. Mergé+poussé sur `main`.
+- **Cycle #5 (managers = aussi techniciens)** : ⏳ code livré sur la branche
+  `cycle-5-managers-techniciens` (**pas encore mergé**). Mobile : `HomeShell` cumule 3 onglets
+  pour un manager (Pointage + Mes tâches + Tâches créées) ; `TaskCreateScreen` propose
+  l'auto-assignation (option « Moi (vous) »). Functions : garde-fou anti-push-perso quand
+  `assigneeId == createdBy` (pas de push « Nouvelle tâche » ni « à valider » vers soi ; push
+  « validée » conservé). **Aucun changement de règles ni de modèle.** Tests : mobile 43/43 +
+  analyze propre, Functions unitaires 20/20 ; règles 2 tests documentaires ajoutés (émulateur
+  à lancer côté user → attendu 17/17). **Reste côté user : tests règles émulateur + validation
+  appareil + merge `--no-ff` sur `main` + `firebase deploy --only functions`.** Voir docs/HANDOFF.md.
 - **Phase 4 (durcissement : App Check, anomalies, chemins Storage par user, publication Play Store)** : à faire.
 
 Voir **docs/HANDOFF.md** pour reprendre exactement où on en est.
